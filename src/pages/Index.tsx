@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { MetricCard } from "@/components/MetricCard";
-import { FunnelAnalysis } from "@/components/FunnelAnalysis";
+import { EditableMetricCard } from "@/components/EditableMetricCard";
 import { ActionableInsights } from "@/components/ActionableInsights";
 import { PredictiveAnalytics } from "@/components/PredictiveAnalytics";
 import { WeeklyTrendChart } from "@/components/WeeklyTrendChart";
+import { GoalsSection } from "@/components/GoalsSection";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Users, Calendar, TrendingUp, Target, Plus, Settings } from "lucide-react";
+import { Users, Calendar, TrendingUp, Target, Plus, Settings, MessageSquare } from "lucide-react";
 
 // Sample data - in production, this would come from API/database
 const campaignData = [
@@ -46,72 +47,6 @@ const campaignData = [
   },
 ];
 
-const overallMetrics = {
-  totalLeadsGenerated: 2795,
-  weeklyChange: 8.3,
-  totalAppointmentsBooked: 62,
-  appointmentWeeklyChange: -12.5,
-  overallResponseRate: 4.9,
-  responseRateWeeklyChange: 2.1,
-  overallConversionRate: 15.2,
-  conversionWeeklyChange: -5.8,
-};
-
-const funnelData = {
-  tofu: {
-    stage: "Lead Generation (TOFU)",
-    prospects: 2795,
-    conversionRate: 4.9,
-    status: "good" as const,
-    issue: null,
-  },
-  mofu: {
-    stage: "Initial Response (MOFU)",
-    prospects: 137,
-    conversionRate: 15.2,
-    status: "warning" as const,
-    issue: "Response rate declining. Consider A/B testing new messaging approaches.",
-  },
-  bofu: {
-    stage: "Appointments Booked (BOFU)",
-    prospects: 62,
-    conversionRate: 45.3,
-    status: "critical" as const,
-    issue: "Low appointment conversion. Improve follow-up cadence and value proposition.",
-  },
-};
-
-const recommendations = [
-  {
-    id: 1,
-    priority: "high" as const,
-    category: "Lead Generation",
-    action: "Create 5 new pieces of content targeting SaaS decision-makers",
-    expectedImpact: "+20% lead volume in 2 weeks",
-  },
-  {
-    id: 2,
-    priority: "high" as const,
-    category: "Follow-up",
-    action: "Implement 3-touch follow-up sequence for non-responders",
-    expectedImpact: "+8% response rate",
-  },
-  {
-    id: 3,
-    priority: "medium" as const,
-    category: "Messaging",
-    action: "A/B test new subject lines emphasizing ROI vs. features",
-    expectedImpact: "+5% open rate",
-  },
-  {
-    id: 4,
-    priority: "low" as const,
-    category: "Outreach Volume",
-    action: "Increase daily outreach capacity by 15%",
-    expectedImpact: "+12 appointments/month",
-  },
-];
-
 const predictiveData = {
   currentPace: {
     appointmentsPerWeek: 15.5,
@@ -135,8 +70,121 @@ const predictiveData = {
 
 const Index = () => {
   const [selectedCampaign, setSelectedCampaign] = useState<string>("all");
+  const [totalLeads, setTotalLeads] = useState(2795);
+  const [totalAppointments, setTotalAppointments] = useState(62);
+  const [totalReplies, setTotalReplies] = useState(137);
+  const [goals, setGoals] = useState({ targetAppointments: 10, targetResponseRate: 5 });
 
-  const currentCampaign = selectedCampaign === "all" 
+  // Auto-calculate rates
+  const responseRate = useMemo(() => {
+    return totalLeads > 0 ? ((totalReplies / totalLeads) * 100).toFixed(1) : "0.0";
+  }, [totalLeads, totalReplies]);
+
+  const conversionRate = useMemo(() => {
+    return totalReplies > 0 ? ((totalAppointments / totalReplies) * 100).toFixed(1) : "0.0";
+  }, [totalAppointments, totalReplies]);
+
+  // Generate dynamic recommendations based on goals
+  const recommendations = useMemo(() => {
+    const recs = [];
+    const currentResponseRate = parseFloat(responseRate);
+    const appointmentGap = goals.targetAppointments - totalAppointments;
+
+    if (appointmentGap > 0) {
+      const currentConversionRate = totalReplies > 0 ? totalAppointments / totalReplies : 0;
+      const neededReplies = Math.ceil(goals.targetAppointments / (currentConversionRate || 0.1));
+      const neededLeads = Math.ceil(neededReplies / ((currentResponseRate / 100) || 0.05));
+      const additionalLeads = Math.max(0, neededLeads - totalLeads);
+
+      if (additionalLeads > 0) {
+        recs.push({
+          id: 1,
+          priority: "high" as const,
+          category: "Lead Volume",
+          action: `Reach out to ${additionalLeads.toLocaleString()} additional prospects to hit ${goals.targetAppointments} appointment goal`,
+          expectedImpact: `${appointmentGap} more appointments needed`,
+        });
+
+        const additionalMailboxes = Math.ceil(additionalLeads / 500);
+        if (additionalMailboxes > 0) {
+          recs.push({
+            id: 2,
+            priority: "high" as const,
+            category: "Infrastructure",
+            action: `Purchase ${additionalMailboxes} additional mailbox${additionalMailboxes > 1 ? 'es' : ''} to increase outreach capacity`,
+            expectedImpact: `Support ${additionalLeads.toLocaleString()} more leads`,
+          });
+        }
+
+        recs.push({
+          id: 3,
+          priority: "high" as const,
+          category: "Lead Sourcing",
+          action: "Source and validate new lead lists matching ICP criteria",
+          expectedImpact: `Build pipeline for ${additionalLeads.toLocaleString()} leads`,
+        });
+      }
+    }
+
+    if (currentResponseRate < goals.targetResponseRate) {
+      recs.push({
+        id: 4,
+        priority: "medium" as const,
+        category: "Messaging",
+        action: "A/B test new subject lines and opening hooks to improve response rate",
+        expectedImpact: `Target: ${goals.targetResponseRate}% (Current: ${responseRate}%)`,
+      });
+
+      recs.push({
+        id: 5,
+        priority: "medium" as const,
+        category: "Follow-up",
+        action: "Implement 3-touch follow-up sequence for non-responders",
+        expectedImpact: "+2-3% response rate boost",
+      });
+    }
+
+    if (parseFloat(conversionRate) < 15) {
+      recs.push({
+        id: 6,
+        priority: "medium" as const,
+        category: "Conversion",
+        action: "Optimize appointment booking process and value proposition",
+        expectedImpact: "Improve reply-to-appointment conversion",
+      });
+    }
+
+    return recs.length > 0 ? recs : [{
+      id: 1,
+      priority: "low" as const,
+      category: "Performance",
+      action: "Continue current strategy - metrics are on track",
+      expectedImpact: "Maintain momentum",
+    }];
+  }, [totalLeads, totalAppointments, totalReplies, responseRate, conversionRate, goals]);
+
+  const predictiveData = {
+    currentPace: {
+      appointmentsPerWeek: totalAppointments / 4,
+      responseRate: parseFloat(responseRate),
+    },
+    projectedOutcome: {
+      monthlyAppointments: totalAppointments,
+      confidence: 87,
+    },
+    budgetRecommendations: {
+      additionalLeads: {
+        cost: 500,
+        expectedAppointments: 18,
+      },
+      additionalMailboxes: {
+        cost: 300,
+        expectedAppointments: 12,
+      },
+    },
+  };
+
+  const currentCampaign = selectedCampaign === "all"
     ? null 
     : campaignData.find(c => c.id.toString() === selectedCampaign);
 
@@ -196,34 +244,44 @@ const Index = () => {
           </Select>
         </div>
 
+        {/* Goals Section */}
+        <GoalsSection onGoalsUpdate={setGoals} />
+
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <MetricCard
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <EditableMetricCard
             title="Total Leads Generated"
-            value={overallMetrics.totalLeadsGenerated.toLocaleString()}
-            change={overallMetrics.weeklyChange}
-            subtitle="vs last week"
+            value={totalLeads}
+            onChange={setTotalLeads}
+            subtitle="Click to edit"
             icon={<Users className="w-4 h-4" />}
           />
-          <MetricCard
+          <EditableMetricCard
+            title="Total Replies Received"
+            value={totalReplies}
+            onChange={setTotalReplies}
+            subtitle="Click to edit"
+            icon={<MessageSquare className="w-4 h-4" />}
+          />
+          <EditableMetricCard
             title="Appointments Booked"
-            value={overallMetrics.totalAppointmentsBooked}
-            change={overallMetrics.appointmentWeeklyChange}
-            subtitle="vs last week"
+            value={totalAppointments}
+            onChange={setTotalAppointments}
+            subtitle="Click to edit"
             icon={<Calendar className="w-4 h-4" />}
           />
           <MetricCard
             title="Response Rate"
-            value={`${overallMetrics.overallResponseRate}%`}
-            change={overallMetrics.responseRateWeeklyChange}
-            subtitle="vs last week"
+            value={`${responseRate}%`}
+            change={0}
+            subtitle="auto-calculated"
             icon={<TrendingUp className="w-4 h-4" />}
           />
           <MetricCard
             title="Conversion Rate"
-            value={`${overallMetrics.overallConversionRate}%`}
-            change={overallMetrics.conversionWeeklyChange}
-            subtitle="response to appointment"
+            value={`${conversionRate}%`}
+            change={0}
+            subtitle="reply to appointment"
             icon={<Target className="w-4 h-4" />}
           />
         </div>
@@ -238,7 +296,6 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column */}
           <div className="space-y-6">
-            <FunnelAnalysis data={funnelData} />
             <ActionableInsights recommendations={recommendations} />
           </div>
 
