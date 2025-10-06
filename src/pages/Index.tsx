@@ -1,13 +1,15 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { MetricCard } from "@/components/MetricCard";
 import { EditableMetricCard } from "@/components/EditableMetricCard";
 import { ActionableInsights } from "@/components/ActionableInsights";
 import { PredictiveAnalytics } from "@/components/PredictiveAnalytics";
 import { WeeklyTrendChart } from "@/components/WeeklyTrendChart";
 import { GoalsSection } from "@/components/GoalsSection";
+import { CustomizationPanel } from "@/components/CustomizationPanel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Users, Calendar, TrendingUp, Target, Plus, Settings, MessageSquare } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Users, Calendar, TrendingUp, Target, Plus, Settings, MessageSquare, FolderPlus } from "lucide-react";
 
 // Sample data - in production, this would come from API/database
 const campaignData = [
@@ -74,6 +76,13 @@ const Index = () => {
   const [totalAppointments, setTotalAppointments] = useState(62);
   const [totalReplies, setTotalReplies] = useState(137);
   const [goals, setGoals] = useState({ targetAppointments: 10, targetResponseRate: 5 });
+  const [brandColor, setBrandColor] = useState("#4F46E5");
+  const [logo, setLogo] = useState("");
+
+  // Update CSS custom property for dynamic brand color
+  useEffect(() => {
+    document.documentElement.style.setProperty('--brand-color', brandColor);
+  }, [brandColor]);
 
   // Auto-calculate rates
   const responseRate = useMemo(() => {
@@ -184,20 +193,37 @@ const Index = () => {
     },
   };
 
-  const currentCampaign = selectedCampaign === "all"
+  const currentCampaign = selectedCampaign === "all" 
     ? null 
     : campaignData.find(c => c.id.toString() === selectedCampaign);
 
-  const displayData = currentCampaign || {
-    weeklyData: [
-      { week: "Week 1", leads: 300, responses: 17, appointments: 7 },
-      { week: "Week 2", leads: 365, responses: 23, appointments: 11 },
-      { week: "Week 3", leads: 330, responses: 15, appointments: 9 },
-      { week: "Week 4", leads: 370, responses: 28, appointments: 13 },
-      { week: "Week 5", leads: 367, responses: 19, appointments: 8 },
-      { week: "Week 6", leads: 407, responses: 20, appointments: 6 },
-    ],
-  };
+  // Generate realistic weekly data that sums to actual totals
+  const displayData = useMemo(() => {
+    const numWeeks = 6;
+    const weeklyData = [];
+    
+    // Distribute totals across weeks with some variation
+    for (let i = 0; i < numWeeks; i++) {
+      const weekFactor = 0.8 + Math.random() * 0.4; // Random between 0.8 and 1.2
+      weeklyData.push({
+        week: `Week ${i + 1}`,
+        leads: Math.round((totalLeads / numWeeks) * weekFactor),
+        responses: Math.round((totalReplies / numWeeks) * weekFactor),
+        appointments: Math.round((totalAppointments / numWeeks) * weekFactor),
+      });
+    }
+    
+    // Adjust last week to ensure totals match exactly
+    const leadsSum = weeklyData.reduce((sum, w) => sum + w.leads, 0);
+    const responsesSum = weeklyData.reduce((sum, w) => sum + w.responses, 0);
+    const appointmentsSum = weeklyData.reduce((sum, w) => sum + w.appointments, 0);
+    
+    weeklyData[numWeeks - 1].leads += totalLeads - leadsSum;
+    weeklyData[numWeeks - 1].responses += totalReplies - responsesSum;
+    weeklyData[numWeeks - 1].appointments += totalAppointments - appointmentsSum;
+    
+    return currentCampaign || { weeklyData };
+  }, [totalLeads, totalReplies, totalAppointments, currentCampaign]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -205,20 +231,48 @@ const Index = () => {
       <header className="border-b bg-card shadow-primary-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
-                CampaignFlow Pro
-              </h1>
-              <p className="text-sm text-muted-foreground">B2B Cold Outreach Analytics</p>
+            <div className="flex items-center gap-3">
+              {logo && (
+                <img src={logo} alt="Company Logo" className="h-10 w-auto rounded" />
+              )}
+              <div>
+                <h1 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
+                  CampaignFlow Pro
+                </h1>
+                <p className="text-sm text-muted-foreground">B2B Cold Outreach Analytics</p>
+              </div>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.open(window.location.href, '_blank')}
+              >
                 <Plus className="w-4 h-4 mr-2" />
                 New Campaign
               </Button>
-              <Button variant="ghost" size="icon">
-                <Settings className="w-4 h-4" />
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.open('https://lovable.dev', '_blank')}
+              >
+                <FolderPlus className="w-4 h-4 mr-2" />
+                New Project
               </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Settings className="w-4 h-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80">
+                  <CustomizationPanel
+                    currentColor={brandColor}
+                    onColorChange={setBrandColor}
+                    onLogoChange={setLogo}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </div>
