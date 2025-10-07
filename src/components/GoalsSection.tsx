@@ -6,16 +6,23 @@ import { Target, Save } from "lucide-react";
 import { useState } from "react";
 
 interface GoalsSectionProps {
-  onGoalsUpdate: (goals: { targetAppointments: number; targetResponseRate: number }) => void;
+  onGoalsUpdate: (goals: { 
+    targetAppointments: number; 
+    targetResponseRate: number;
+    targetVolume: number;
+    allocatedBudget: number;
+  }) => void;
 }
 
 export const GoalsSection = ({ onGoalsUpdate }: GoalsSectionProps) => {
   const [targetAppointments, setTargetAppointments] = useState(10);
   const [targetResponseRate, setTargetResponseRate] = useState(5);
+  const [targetVolume, setTargetVolume] = useState(5000);
+  const [allocatedBudget, setAllocatedBudget] = useState(100);
   const [isSaved, setIsSaved] = useState(false);
 
   const handleSave = () => {
-    onGoalsUpdate({ targetAppointments, targetResponseRate });
+    onGoalsUpdate({ targetAppointments, targetResponseRate, targetVolume, allocatedBudget });
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2000);
   };
@@ -29,7 +36,7 @@ export const GoalsSection = ({ onGoalsUpdate }: GoalsSectionProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label htmlFor="targetAppointments">Target Appointments (Monthly)</Label>
             <Input
@@ -49,6 +56,28 @@ export const GoalsSection = ({ onGoalsUpdate }: GoalsSectionProps) => {
               onChange={(e) => setTargetResponseRate(parseFloat(e.target.value) || 0)}
               className="text-lg font-semibold"
               step="0.1"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="targetVolume">Target Volume (Monthly)</Label>
+            <Input
+              id="targetVolume"
+              type="number"
+              value={targetVolume}
+              onChange={(e) => setTargetVolume(parseInt(e.target.value) || 0)}
+              className="text-lg font-semibold"
+              placeholder="Total outreach messages"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="allocatedBudget">Allocated Budget (Monthly)</Label>
+            <Input
+              id="allocatedBudget"
+              type="number"
+              value={allocatedBudget}
+              onChange={(e) => setAllocatedBudget(parseInt(e.target.value) || 0)}
+              className="text-lg font-semibold"
+              placeholder="Budget in $"
             />
           </div>
         </div>

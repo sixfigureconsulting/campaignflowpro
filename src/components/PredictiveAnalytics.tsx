@@ -6,48 +6,42 @@ interface PredictiveAnalyticsProps {
   currentPace: {
     appointmentsPerWeek: number;
     responseRate: number;
+    weeklyOutreachVolume: number;
   };
   projectedOutcome: {
     monthlyAppointments: number;
     confidence: number;
   };
-  budgetRecommendations: {
-    additionalLeads: {
-      cost: number;
-      expectedAppointments: number;
-    };
-    additionalMailboxes: {
-      cost: number;
-      expectedAppointments: number;
-    };
-  };
 }
 
 export const PredictiveAnalytics = ({ 
   currentPace, 
-  projectedOutcome, 
-  budgetRecommendations 
+  projectedOutcome
 }: PredictiveAnalyticsProps) => {
   return (
     <Card className="shadow-primary-md">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-primary" />
-          Predictive Analytics & Budget Allocation
+          Predictive Analytics
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Current Performance */}
         <div className="space-y-3">
           <h4 className="font-semibold text-sm">Current Pace</h4>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div className="p-3 rounded-lg bg-muted/50">
               <p className="text-xs text-muted-foreground mb-1">Weekly Appointments</p>
-              <p className="text-xl font-bold">{currentPace.appointmentsPerWeek}</p>
+              <p className="text-xl font-bold">{currentPace.appointmentsPerWeek.toFixed(1)}</p>
             </div>
             <div className="p-3 rounded-lg bg-muted/50">
               <p className="text-xs text-muted-foreground mb-1">Response Rate</p>
               <p className="text-xl font-bold">{currentPace.responseRate}%</p>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/50">
+              <p className="text-xs text-muted-foreground mb-1">Weekly Outreach</p>
+              <p className="text-xl font-bold">{currentPace.weeklyOutreachVolume.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -65,56 +59,6 @@ export const PredictiveAnalytics = ({
               {projectedOutcome.monthlyAppointments}
             </span>
             <span className="text-sm text-muted-foreground">appointments</span>
-          </div>
-        </div>
-
-        {/* Budget Recommendations */}
-        <div className="space-y-3">
-          <h4 className="font-semibold text-sm flex items-center gap-2">
-            <DollarSign className="w-4 h-4" />
-            Budget Allocation Options
-          </h4>
-          
-          <div className="space-y-2">
-            <div className="p-4 rounded-lg border bg-card hover:shadow-primary-sm transition-shadow">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-primary" />
-                  <div>
-                    <p className="font-medium text-sm">More Lead Sources</p>
-                    <p className="text-xs text-muted-foreground">
-                      Expected: +{budgetRecommendations.additionalLeads.expectedAppointments} appointments/month
-                    </p>
-                  </div>
-                </div>
-                <span className="font-bold text-primary">
-                  ${budgetRecommendations.additionalLeads.cost}
-                </span>
-              </div>
-              <Button size="sm" className="w-full">
-                Allocate Budget
-              </Button>
-            </div>
-
-            <div className="p-4 rounded-lg border bg-card hover:shadow-primary-sm transition-shadow">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-primary" />
-                  <div>
-                    <p className="font-medium text-sm">Additional Mailboxes</p>
-                    <p className="text-xs text-muted-foreground">
-                      Expected: +{budgetRecommendations.additionalMailboxes.expectedAppointments} appointments/month
-                    </p>
-                  </div>
-                </div>
-                <span className="font-bold text-primary">
-                  ${budgetRecommendations.additionalMailboxes.cost}
-                </span>
-              </div>
-              <Button size="sm" className="w-full">
-                Allocate Budget
-              </Button>
-            </div>
           </div>
         </div>
       </CardContent>

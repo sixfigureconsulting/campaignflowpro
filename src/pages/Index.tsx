@@ -6,6 +6,9 @@ import { PredictiveAnalytics } from "@/components/PredictiveAnalytics";
 import { WeeklyTrendChart } from "@/components/WeeklyTrendChart";
 import { GoalsSection } from "@/components/GoalsSection";
 import { CustomizationPanel } from "@/components/CustomizationPanel";
+import { BudgetAllocation } from "@/components/BudgetAllocation";
+import { InfrastructureSection } from "@/components/InfrastructureSection";
+import { CampaignTabs, CampaignTab } from "@/components/CampaignTabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -72,12 +75,50 @@ const predictiveData = {
 
 const Index = () => {
   const [selectedCampaign, setSelectedCampaign] = useState<string>("all");
-  const [totalLeads, setTotalLeads] = useState(2795);
-  const [totalAppointments, setTotalAppointments] = useState(62);
-  const [totalReplies, setTotalReplies] = useState(137);
-  const [goals, setGoals] = useState({ targetAppointments: 10, targetResponseRate: 5 });
   const [brandColor, setBrandColor] = useState("#4F46E5");
   const [logo, setLogo] = useState("");
+  
+  // Campaign tabs state
+  const [campaignTabs, setCampaignTabs] = useState<CampaignTab[]>([
+    { id: "campaign-1", name: "Campaign 1" }
+  ]);
+  const [activeTab, setActiveTab] = useState("campaign-1");
+  
+  // State per campaign (keyed by tab id)
+  const [campaignData, setCampaignData] = useState<Record<string, {
+    totalLeads: number;
+    totalAppointments: number;
+    totalReplies: number;
+    goals: { targetAppointments: number; targetResponseRate: number; targetVolume: number; allocatedBudget: number };
+    infrastructure: { totalMailboxes: number; totalLinkedInAccounts: number };
+  }>>({
+    "campaign-1": {
+      totalLeads: 2795,
+      totalAppointments: 62,
+      totalReplies: 137,
+      goals: { targetAppointments: 10, targetResponseRate: 5, targetVolume: 5000, allocatedBudget: 100 },
+      infrastructure: { totalMailboxes: 5, totalLinkedInAccounts: 2 }
+    }
+  });
+
+  // Get current campaign data
+  const currentData = campaignData[activeTab] || {
+    totalLeads: 0,
+    totalAppointments: 0,
+    totalReplies: 0,
+    goals: { targetAppointments: 10, targetResponseRate: 5, targetVolume: 5000, allocatedBudget: 100 },
+    infrastructure: { totalMailboxes: 5, totalLinkedInAccounts: 2 }
+  };
+  
+  const { totalLeads, totalAppointments, totalReplies, goals, infrastructure } = currentData;
+  
+  // Update campaign data helpers
+  const updateCampaignData = (updates: Partial<typeof currentData>) => {
+    setCampaignData(prev => ({
+      ...prev,
+      [activeTab]: { ...prev[activeTab], ...updates }
+    }));
+  };
 
   // Update CSS custom property for dynamic brand color
   useEffect(() => {
@@ -176,26 +217,50 @@ const Index = () => {
     currentPace: {
       appointmentsPerWeek: totalAppointments / 4,
       responseRate: parseFloat(responseRate),
+      weeklyOutreachVolume: Math.round(totalLeads / 4),
     },
     projectedOutcome: {
       monthlyAppointments: totalAppointments,
       confidence: 87,
     },
-    budgetRecommendations: {
-      additionalLeads: {
-        cost: 500,
-        expectedAppointments: 18,
-      },
-      additionalMailboxes: {
-        cost: 300,
-        expectedAppointments: 12,
-      },
-    },
   };
-
-  const currentCampaign = selectedCampaign === "all" 
-    ? null 
-    : campaignData.find(c => c.id.toString() === selectedCampaign);
+  
+  // Handle new campaign creation
+  const handleNewCampaign = () => {
+    const newId = `campaign-${Date.now()}`;
+    const newTab: CampaignTab = {
+      id: newId,
+      name: `Campaign ${campaignTabs.length + 1}`
+    };
+    setCampaignTabs([...campaignTabs, newTab]);
+    setCampaignData(prev => ({
+      ...prev,
+      [newId]: {
+        totalLeads: 0,
+        totalAppointments: 0,
+        totalReplies: 0,
+        goals: { targetAppointments: 10, targetResponseRate: 5, targetVolume: 5000, allocatedBudget: 100 },
+        infrastructure: { totalMailboxes: 5, totalLinkedInAccounts: 2 }
+      }
+    }));
+    setActiveTab(newId);
+  };
+  
+  // Handle tab close
+  const handleTabClose = (tabId: string) => {
+    const newTabs = campaignTabs.filter(tab => tab.id !== tabId);
+    setCampaignTabs(newTabs);
+    
+    // Remove campaign data
+    const newData = { ...campaignData };
+    delete newData[tabId];
+    setCampaignData(newData);
+    
+    // Switch to another tab if closing active tab
+    if (activeTab === tabId && newTabs.length > 0) {
+      setActiveTab(newTabs[0].id);
+    }
+  };
 
   // Generate realistic weekly data that sums to actual totals
   const displayData = useMemo(() => {
@@ -222,8 +287,8 @@ const Index = () => {
     weeklyData[numWeeks - 1].responses += totalReplies - responsesSum;
     weeklyData[numWeeks - 1].appointments += totalAppointments - appointmentsSum;
     
-    return currentCampaign || { weeklyData };
-  }, [totalLeads, totalReplies, totalAppointments, currentCampaign]);
+    return { weeklyData };
+  }, [totalLeads, totalReplies, totalAppointments]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -246,7 +311,7 @@ const Index = () => {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => window.open(window.location.href, '_blank')}
+                onClick={handleNewCampaign}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 New Campaign
@@ -280,88 +345,91 @@ const Index = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 space-y-8">
-        {/* Campaign Selector */}
-        <div className="flex items-center gap-4">
-          <label className="text-sm font-medium">Campaign:</label>
-          <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
-            <SelectTrigger className="w-[300px]">
-              <SelectValue placeholder="Select campaign" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Campaigns</SelectItem>
-              {campaignData.map((campaign) => (
-                <SelectItem key={campaign.id} value={campaign.id.toString()}>
-                  {campaign.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <CampaignTabs
+          tabs={campaignTabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onTabClose={handleTabClose}
+        >
+          {(tabId) => (
+            <div className="space-y-8">
+              {/* Goals Section */}
+              <GoalsSection 
+                onGoalsUpdate={(newGoals) => updateCampaignData({ goals: newGoals })} 
+              />
 
-        {/* Goals Section */}
-        <GoalsSection onGoalsUpdate={setGoals} />
+              {/* Budget Allocation */}
+              <BudgetAllocation allocatedBudget={goals.allocatedBudget} />
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          <EditableMetricCard
-            title="Total Leads Generated"
-            value={totalLeads}
-            onChange={setTotalLeads}
-            subtitle="Click to edit"
-            icon={<Users className="w-4 h-4" />}
-          />
-          <EditableMetricCard
-            title="Total Replies Received"
-            value={totalReplies}
-            onChange={setTotalReplies}
-            subtitle="Click to edit"
-            icon={<MessageSquare className="w-4 h-4" />}
-          />
-          <EditableMetricCard
-            title="Appointments Booked"
-            value={totalAppointments}
-            onChange={setTotalAppointments}
-            subtitle="Click to edit"
-            icon={<Calendar className="w-4 h-4" />}
-          />
-          <MetricCard
-            title="Response Rate"
-            value={`${responseRate}%`}
-            change={0}
-            subtitle="auto-calculated"
-            icon={<TrendingUp className="w-4 h-4" />}
-          />
-          <MetricCard
-            title="Conversion Rate"
-            value={`${conversionRate}%`}
-            change={0}
-            subtitle="reply to appointment"
-            icon={<Target className="w-4 h-4" />}
-          />
-        </div>
+              {/* Infrastructure Section */}
+              <InfrastructureSection 
+                onInfrastructureUpdate={(infra) => updateCampaignData({ infrastructure: infra })}
+              />
 
-        {/* Weekly Trends Chart */}
-        <WeeklyTrendChart 
-          data={displayData.weeklyData} 
-          campaignName={currentCampaign?.name}
-        />
+              {/* Key Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                <EditableMetricCard
+                  title="Total Leads Generated"
+                  value={totalLeads}
+                  onChange={(val) => updateCampaignData({ totalLeads: val })}
+                  subtitle="Click to edit"
+                  icon={<Users className="w-4 h-4" />}
+                />
+                <EditableMetricCard
+                  title="Total Replies Received"
+                  value={totalReplies}
+                  onChange={(val) => updateCampaignData({ totalReplies: val })}
+                  subtitle="Click to edit"
+                  icon={<MessageSquare className="w-4 h-4" />}
+                />
+                <EditableMetricCard
+                  title="Appointments Booked"
+                  value={totalAppointments}
+                  onChange={(val) => updateCampaignData({ totalAppointments: val })}
+                  subtitle="Click to edit"
+                  icon={<Calendar className="w-4 h-4" />}
+                />
+                <MetricCard
+                  title="Response Rate"
+                  value={`${responseRate}%`}
+                  change={0}
+                  subtitle="auto-calculated"
+                  icon={<TrendingUp className="w-4 h-4" />}
+                />
+                <MetricCard
+                  title="Conversion Rate"
+                  value={`${conversionRate}%`}
+                  change={0}
+                  subtitle="reply to appointment"
+                  icon={<Target className="w-4 h-4" />}
+                />
+              </div>
 
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column */}
-          <div className="space-y-6">
-            <ActionableInsights recommendations={recommendations} />
-          </div>
+              {/* Weekly Trends Chart */}
+              <WeeklyTrendChart 
+                data={displayData.weeklyData} 
+                campaignName={campaignTabs.find(t => t.id === activeTab)?.name}
+                goalAppointments={goals.targetAppointments}
+              />
 
-          {/* Right Column */}
-          <div className="space-y-6">
-            <PredictiveAnalytics
-              currentPace={predictiveData.currentPace}
-              projectedOutcome={predictiveData.projectedOutcome}
-              budgetRecommendations={predictiveData.budgetRecommendations}
-            />
-          </div>
-        </div>
+              {/* Two Column Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left Column */}
+                <div className="space-y-6">
+                  <ActionableInsights recommendations={recommendations} />
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-6">
+                  <PredictiveAnalytics
+                    currentPace={predictiveData.currentPace}
+                    projectedOutcome={predictiveData.projectedOutcome}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </CampaignTabs>
       </main>
     </div>
   );

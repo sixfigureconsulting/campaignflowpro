@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 interface WeeklyData {
   week: string;
@@ -11,9 +11,13 @@ interface WeeklyData {
 interface WeeklyTrendChartProps {
   data: WeeklyData[];
   campaignName?: string;
+  goalAppointments?: number;
 }
 
-export const WeeklyTrendChart = ({ data, campaignName }: WeeklyTrendChartProps) => {
+export const WeeklyTrendChart = ({ data, campaignName, goalAppointments }: WeeklyTrendChartProps) => {
+  // Calculate weekly goal (distribute monthly goal across weeks)
+  const weeklyGoal = goalAppointments ? goalAppointments / 4 : undefined;
+
   return (
     <Card className="shadow-primary-md">
       <CardHeader>
@@ -42,6 +46,15 @@ export const WeeklyTrendChart = ({ data, campaignName }: WeeklyTrendChartProps) 
               }}
             />
             <Legend />
+            {weeklyGoal && (
+              <ReferenceLine 
+                y={weeklyGoal} 
+                stroke="#ef4444" 
+                strokeDasharray="5 5" 
+                strokeWidth={2}
+                label={{ value: 'Goal', position: 'right', fill: '#ef4444', fontSize: 12 }}
+              />
+            )}
             <Line 
               type="monotone" 
               dataKey="leads" 
