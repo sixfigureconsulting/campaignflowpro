@@ -366,8 +366,14 @@ const Index = () => {
                 onInfrastructureUpdate={(infra) => updateCampaignData({ infrastructure: infra })}
               />
 
-              {/* Key Metrics */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+              {/* Total Campaign Status */}
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
+                  Total Campaign Status (October)
+                </h2>
+                
+                {/* Key Metrics */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
                 <EditableMetricCard
                   title="Total Leads Generated"
                   value={totalLeads}
@@ -403,6 +409,7 @@ const Index = () => {
                   subtitle="reply to appointment"
                   icon={<Target className="w-4 h-4" />}
                 />
+                </div>
               </div>
 
               {/* Weekly Trends Chart */}
@@ -416,15 +423,15 @@ const Index = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left Column */}
                 <div className="space-y-6">
-                  <ActionableInsights recommendations={recommendations} />
-                </div>
-
-                {/* Right Column */}
-                <div className="space-y-6">
                   <PredictiveAnalytics
                     currentPace={predictiveData.currentPace}
                     projectedOutcome={predictiveData.projectedOutcome}
                   />
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-6">
+                  <ActionableInsights recommendations={recommendations} />
                 </div>
               </div>
             </div>

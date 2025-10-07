@@ -59,14 +59,14 @@ export const GoalsSection = ({ onGoalsUpdate }: GoalsSectionProps) => {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="targetVolume">Target Volume (Monthly)</Label>
+            <Label htmlFor="targetVolume">Target Leads Targeted (Monthly)</Label>
             <Input
               id="targetVolume"
               type="number"
               value={targetVolume}
               onChange={(e) => setTargetVolume(parseInt(e.target.value) || 0)}
               className="text-lg font-semibold"
-              placeholder="Total outreach messages"
+              placeholder="Total leads to target"
             />
           </div>
           <div className="space-y-2">
