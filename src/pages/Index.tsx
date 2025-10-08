@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { MetricCard } from "@/components/MetricCard";
 import { EditableMetricCard } from "@/components/EditableMetricCard";
 import { ActionableInsights } from "@/components/ActionableInsights";
-import { PredictiveAnalytics } from "@/components/PredictiveAnalytics";
+import { PredictiveBudgetAnalytics } from "@/components/PredictiveBudgetAnalytics";
 import { WeeklyTrendChart } from "@/components/WeeklyTrendChart";
 import { GoalsSection } from "@/components/GoalsSection";
 import { CustomizationPanel } from "@/components/CustomizationPanel";
@@ -262,6 +262,13 @@ const Index = () => {
     }
   };
 
+  // Handle tab rename
+  const handleTabRename = (tabId: string, newName: string) => {
+    setCampaignTabs(tabs => 
+      tabs.map(tab => tab.id === tabId ? { ...tab, name: newName } : tab)
+    );
+  };
+
   // Generate realistic weekly data that sums to actual totals
   const displayData = useMemo(() => {
     const numWeeks = 6;
@@ -350,26 +357,21 @@ const Index = () => {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           onTabClose={handleTabClose}
+          onTabRename={handleTabRename}
         >
           {(tabId) => (
             <div className="space-y-8">
-              {/* Goals Section */}
-              <GoalsSection 
-                onGoalsUpdate={(newGoals) => updateCampaignData({ goals: newGoals })} 
+              {/* Weekly Trends Chart - First */}
+              <WeeklyTrendChart 
+                data={displayData.weeklyData} 
+                campaignName={campaignTabs.find(t => t.id === activeTab)?.name}
+                goalAppointments={goals.targetAppointments}
               />
 
-              {/* Budget Allocation */}
-              <BudgetAllocation allocatedBudget={goals.allocatedBudget} />
-
-              {/* Infrastructure Section */}
-              <InfrastructureSection 
-                onInfrastructureUpdate={(infra) => updateCampaignData({ infrastructure: infra })}
-              />
-
-              {/* Total Campaign Status */}
+              {/* Current Outbound Performance */}
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
-                  Total Campaign Status (October)
+                  Current Outbound Performance
                 </h2>
                 
                 {/* Key Metrics */}
@@ -412,27 +414,39 @@ const Index = () => {
                 </div>
               </div>
 
-              {/* Weekly Trends Chart */}
-              <WeeklyTrendChart 
-                data={displayData.weeklyData} 
-                campaignName={campaignTabs.find(t => t.id === activeTab)?.name}
-                goalAppointments={goals.targetAppointments}
+              {/* Define Campaign Goals */}
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
+                  Define Campaign Goals
+                </h2>
+                <GoalsSection 
+                  onGoalsUpdate={(newGoals) => updateCampaignData({ goals: newGoals })} 
+                />
+              </div>
+
+              {/* Infrastructure Available */}
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
+                  Infrastructure Available
+                </h2>
+                <InfrastructureSection 
+                  onInfrastructureUpdate={(infra) => updateCampaignData({ infrastructure: infra })}
+                />
+              </div>
+
+              {/* Budget & Performance Projections */}
+              <PredictiveBudgetAnalytics
+                allocatedBudget={goals.allocatedBudget}
+                currentPace={predictiveData.currentPace}
+                projectedOutcome={predictiveData.projectedOutcome}
               />
 
-              {/* Two Column Layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Left Column */}
-                <div className="space-y-6">
-                  <PredictiveAnalytics
-                    currentPace={predictiveData.currentPace}
-                    projectedOutcome={predictiveData.projectedOutcome}
-                  />
-                </div>
-
-                {/* Right Column */}
-                <div className="space-y-6">
-                  <ActionableInsights recommendations={recommendations} />
-                </div>
+              {/* Actionable Recommendations */}
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
+                  Actionable Recommendations
+                </h2>
+                <ActionableInsights recommendations={recommendations} />
               </div>
             </div>
           )}
