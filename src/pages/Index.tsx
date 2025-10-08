@@ -9,6 +9,7 @@ import { CustomizationPanel } from "@/components/CustomizationPanel";
 import { BudgetAllocation } from "@/components/BudgetAllocation";
 import { InfrastructureSection } from "@/components/InfrastructureSection";
 import { CampaignTabs, CampaignTab } from "@/components/CampaignTabs";
+import { WeeklyTabs, WeekTab } from "@/components/WeeklyTabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -84,18 +85,31 @@ const Index = () => {
   ]);
   const [activeTab, setActiveTab] = useState("campaign-1");
   
+  // Weekly tabs state per campaign
+  const [weeklyTabs, setWeeklyTabs] = useState<Record<string, WeekTab[]>>({
+    "campaign-1": [{ id: "week-1", weekNumber: 1 }]
+  });
+  const [activeWeek, setActiveWeek] = useState<Record<string, string>>({
+    "campaign-1": "week-1"
+  });
+  
+  // Weekly data per campaign per week
+  const [weeklyData, setWeeklyData] = useState<Record<string, Record<string, {
+    leads: number;
+    appointments: number;
+    replies: number;
+  }>>>({
+    "campaign-1": {
+      "week-1": { leads: 0, appointments: 0, replies: 0 }
+    }
+  });
+  
   // State per campaign (keyed by tab id)
   const [campaignData, setCampaignData] = useState<Record<string, {
-    totalLeads: number;
-    totalAppointments: number;
-    totalReplies: number;
     goals: { targetAppointments: number; targetResponseRate: number; targetVolume: number; allocatedBudget: number };
     infrastructure: { totalMailboxes: number; totalLinkedInAccounts: number };
   }>>({
     "campaign-1": {
-      totalLeads: 2795,
-      totalAppointments: 62,
-      totalReplies: 137,
       goals: { targetAppointments: 10, targetResponseRate: 5, targetVolume: 5000, allocatedBudget: 100 },
       infrastructure: { totalMailboxes: 5, totalLinkedInAccounts: 2 }
     }
@@ -103,20 +117,48 @@ const Index = () => {
 
   // Get current campaign data
   const currentData = campaignData[activeTab] || {
-    totalLeads: 0,
-    totalAppointments: 0,
-    totalReplies: 0,
     goals: { targetAppointments: 10, targetResponseRate: 5, targetVolume: 5000, allocatedBudget: 100 },
     infrastructure: { totalMailboxes: 5, totalLinkedInAccounts: 2 }
   };
   
-  const { totalLeads, totalAppointments, totalReplies, goals, infrastructure } = currentData;
+  const { goals, infrastructure } = currentData;
+  
+  // Get current week for active campaign
+  const currentWeekId = activeWeek[activeTab] || "";
+  const currentWeekData = weeklyData[activeTab]?.[currentWeekId] || { leads: 0, appointments: 0, replies: 0 };
+  
+  // Calculate totals across all weeks for current campaign
+  const totalLeads = useMemo(() => {
+    const weeks = weeklyData[activeTab] || {};
+    return Object.values(weeks).reduce((sum, week) => sum + week.leads, 0);
+  }, [weeklyData, activeTab]);
+  
+  const totalAppointments = useMemo(() => {
+    const weeks = weeklyData[activeTab] || {};
+    return Object.values(weeks).reduce((sum, week) => sum + week.appointments, 0);
+  }, [weeklyData, activeTab]);
+  
+  const totalReplies = useMemo(() => {
+    const weeks = weeklyData[activeTab] || {};
+    return Object.values(weeks).reduce((sum, week) => sum + week.replies, 0);
+  }, [weeklyData, activeTab]);
   
   // Update campaign data helpers
   const updateCampaignData = (updates: Partial<typeof currentData>) => {
     setCampaignData(prev => ({
       ...prev,
       [activeTab]: { ...prev[activeTab], ...updates }
+    }));
+  };
+  
+  // Update weekly data
+  const updateWeeklyData = (weekId: string, updates: Partial<typeof currentWeekData>) => {
+    setWeeklyData(prev => ({
+      ...prev,
+      [activeTab]: {
+        ...prev[activeTab],
+        [weekId]: { ...prev[activeTab]?.[weekId], ...updates }
+      }
     }));
   };
 
@@ -236,11 +278,22 @@ const Index = () => {
     setCampaignData(prev => ({
       ...prev,
       [newId]: {
-        totalLeads: 0,
-        totalAppointments: 0,
-        totalReplies: 0,
         goals: { targetAppointments: 10, targetResponseRate: 5, targetVolume: 5000, allocatedBudget: 100 },
         infrastructure: { totalMailboxes: 5, totalLinkedInAccounts: 2 }
+      }
+    }));
+    setWeeklyTabs(prev => ({
+      ...prev,
+      [newId]: [{ id: "week-1", weekNumber: 1 }]
+    }));
+    setActiveWeek(prev => ({
+      ...prev,
+      [newId]: "week-1"
+    }));
+    setWeeklyData(prev => ({
+      ...prev,
+      [newId]: {
+        "week-1": { leads: 0, appointments: 0, replies: 0 }
       }
     }));
     setActiveTab(newId);
@@ -256,6 +309,19 @@ const Index = () => {
     delete newData[tabId];
     setCampaignData(newData);
     
+    // Remove weekly data
+    const newWeeklyData = { ...weeklyData };
+    delete newWeeklyData[tabId];
+    setWeeklyData(newWeeklyData);
+    
+    const newWeeklyTabs = { ...weeklyTabs };
+    delete newWeeklyTabs[tabId];
+    setWeeklyTabs(newWeeklyTabs);
+    
+    const newActiveWeek = { ...activeWeek };
+    delete newActiveWeek[tabId];
+    setActiveWeek(newActiveWeek);
+    
     // Switch to another tab if closing active tab
     if (activeTab === tabId && newTabs.length > 0) {
       setActiveTab(newTabs[0].id);
@@ -268,34 +334,46 @@ const Index = () => {
       tabs.map(tab => tab.id === tabId ? { ...tab, name: newName } : tab)
     );
   };
+  
+  // Handle adding new week
+  const handleAddWeek = () => {
+    const currentWeeks = weeklyTabs[activeTab] || [];
+    const newWeekNumber = currentWeeks.length + 1;
+    const newWeekId = `week-${Date.now()}`;
+    const newWeek: WeekTab = {
+      id: newWeekId,
+      weekNumber: newWeekNumber
+    };
+    
+    setWeeklyTabs(prev => ({
+      ...prev,
+      [activeTab]: [...(prev[activeTab] || []), newWeek]
+    }));
+    
+    setWeeklyData(prev => ({
+      ...prev,
+      [activeTab]: {
+        ...prev[activeTab],
+        [newWeekId]: { leads: 0, appointments: 0, replies: 0 }
+      }
+    }));
+    
+    setActiveWeek(prev => ({
+      ...prev,
+      [activeTab]: newWeekId
+    }));
+  };
 
-  // Generate realistic weekly data that sums to actual totals
+  // Generate graph data for current week
   const displayData = useMemo(() => {
-    const numWeeks = 6;
-    const weeklyData = [];
-    
-    // Distribute totals across weeks with some variation
-    for (let i = 0; i < numWeeks; i++) {
-      const weekFactor = 0.8 + Math.random() * 0.4; // Random between 0.8 and 1.2
-      weeklyData.push({
-        week: `Week ${i + 1}`,
-        leads: Math.round((totalLeads / numWeeks) * weekFactor),
-        responses: Math.round((totalReplies / numWeeks) * weekFactor),
-        appointments: Math.round((totalAppointments / numWeeks) * weekFactor),
-      });
-    }
-    
-    // Adjust last week to ensure totals match exactly
-    const leadsSum = weeklyData.reduce((sum, w) => sum + w.leads, 0);
-    const responsesSum = weeklyData.reduce((sum, w) => sum + w.responses, 0);
-    const appointmentsSum = weeklyData.reduce((sum, w) => sum + w.appointments, 0);
-    
-    weeklyData[numWeeks - 1].leads += totalLeads - leadsSum;
-    weeklyData[numWeeks - 1].responses += totalReplies - responsesSum;
-    weeklyData[numWeeks - 1].appointments += totalAppointments - appointmentsSum;
-    
-    return { weeklyData };
-  }, [totalLeads, totalReplies, totalAppointments]);
+    const currentWeekNumber = weeklyTabs[activeTab]?.find(w => w.id === currentWeekId)?.weekNumber || 1;
+    return [{
+      week: `Week ${currentWeekNumber}`,
+      leads: currentWeekData.leads,
+      responses: currentWeekData.replies,
+      appointments: currentWeekData.appointments,
+    }];
+  }, [currentWeekId, currentWeekData, weeklyTabs, activeTab]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -363,38 +441,80 @@ const Index = () => {
             <div className="space-y-8">
               {/* Weekly Trends Chart - First */}
               <WeeklyTrendChart 
-                data={displayData.weeklyData} 
+                data={displayData} 
                 campaignName={campaignTabs.find(t => t.id === activeTab)?.name}
                 goalAppointments={goals.targetAppointments}
               />
 
+              {/* Weekly Tabs with Inputs */}
+              <div className="space-y-4">
+                <h2 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
+                  Weekly Data Entry
+                </h2>
+                <WeeklyTabs
+                  tabs={weeklyTabs[activeTab] || []}
+                  activeWeek={currentWeekId}
+                  onWeekChange={(weekId) => setActiveWeek(prev => ({ ...prev, [activeTab]: weekId }))}
+                  onAddWeek={handleAddWeek}
+                >
+                  {(weekId) => {
+                    const weekData = weeklyData[activeTab]?.[weekId] || { leads: 0, appointments: 0, replies: 0 };
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <EditableMetricCard
+                          title="Leads Contacted"
+                          value={weekData.leads}
+                          onChange={(val) => updateWeeklyData(weekId, { leads: val })}
+                          subtitle="Click to edit"
+                          icon={<Users className="w-4 h-4" />}
+                        />
+                        <EditableMetricCard
+                          title="Replies Received"
+                          value={weekData.replies}
+                          onChange={(val) => updateWeeklyData(weekId, { replies: val })}
+                          subtitle="Click to edit"
+                          icon={<MessageSquare className="w-4 h-4" />}
+                        />
+                        <EditableMetricCard
+                          title="Appointments Booked"
+                          value={weekData.appointments}
+                          onChange={(val) => updateWeeklyData(weekId, { appointments: val })}
+                          subtitle="Click to edit"
+                          icon={<Calendar className="w-4 h-4" />}
+                        />
+                      </div>
+                    );
+                  }}
+                </WeeklyTabs>
+              </div>
+
               {/* Current Outbound Performance */}
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
-                  Current Outbound Performance
+                  Total Campaign Status (October)
                 </h2>
                 
                 {/* Key Metrics */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                <EditableMetricCard
+                <MetricCard
                   title="Total Leads Generated"
                   value={totalLeads}
-                  onChange={(val) => updateCampaignData({ totalLeads: val })}
-                  subtitle="Click to edit"
+                  change={0}
+                  subtitle="across all weeks"
                   icon={<Users className="w-4 h-4" />}
                 />
-                <EditableMetricCard
+                <MetricCard
                   title="Total Replies Received"
                   value={totalReplies}
-                  onChange={(val) => updateCampaignData({ totalReplies: val })}
-                  subtitle="Click to edit"
+                  change={0}
+                  subtitle="across all weeks"
                   icon={<MessageSquare className="w-4 h-4" />}
                 />
-                <EditableMetricCard
+                <MetricCard
                   title="Appointments Booked"
                   value={totalAppointments}
-                  onChange={(val) => updateCampaignData({ totalAppointments: val })}
-                  subtitle="Click to edit"
+                  change={0}
+                  subtitle="across all weeks"
                   icon={<Calendar className="w-4 h-4" />}
                 />
                 <MetricCard

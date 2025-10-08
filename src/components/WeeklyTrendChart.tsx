@@ -52,7 +52,7 @@ export const WeeklyTrendChart = ({ data, campaignName, goalAppointments }: Weekl
                 stroke="#ef4444" 
                 strokeDasharray="5 5" 
                 strokeWidth={2}
-                label={{ value: 'Goal', position: 'right', fill: '#ef4444', fontSize: 12 }}
+                label={{ value: 'Weekly Goal', position: 'right', fill: '#ef4444', fontSize: 12 }}
               />
             )}
             <Line 
@@ -61,6 +61,7 @@ export const WeeklyTrendChart = ({ data, campaignName, goalAppointments }: Weekl
               stroke="hsl(var(--chart-1))" 
               strokeWidth={2}
               name="Leads Contacted"
+              dot={{ r: 4 }}
             />
             <Line 
               type="monotone" 
@@ -68,6 +69,7 @@ export const WeeklyTrendChart = ({ data, campaignName, goalAppointments }: Weekl
               stroke="hsl(var(--chart-3))" 
               strokeWidth={2}
               name="Responses"
+              dot={{ r: 4 }}
             />
             <Line 
               type="monotone" 
@@ -75,6 +77,7 @@ export const WeeklyTrendChart = ({ data, campaignName, goalAppointments }: Weekl
               stroke="hsl(var(--chart-2))" 
               strokeWidth={2}
               name="Appointments"
+              dot={{ r: 4 }}
             />
           </LineChart>
         </ResponsiveContainer>
