@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface WeeklyData {
   week: string;
@@ -15,19 +15,31 @@ interface WeeklyTrendChartProps {
 }
 
 export const WeeklyTrendChart = ({ data, campaignName, goalAppointments }: WeeklyTrendChartProps) => {
-  // Calculate weekly goal (distribute monthly goal across weeks)
-  const weeklyGoal = goalAppointments ? goalAppointments / 4 : undefined;
+  // Calculate cumulative data
+  const cumulativeData = data.map((item, index) => {
+    const previousData = data.slice(0, index + 1);
+    const weekNumber = index + 1;
+    const cumulativeTarget = goalAppointments ? (goalAppointments / 52) * weekNumber : 0;
+    
+    return {
+      week: item.week,
+      leads: previousData.reduce((sum, d) => sum + d.leads, 0),
+      responses: previousData.reduce((sum, d) => sum + d.responses, 0),
+      appointments: previousData.reduce((sum, d) => sum + d.appointments, 0),
+      target: cumulativeTarget,
+    };
+  });
 
   return (
     <Card className="shadow-primary-md">
       <CardHeader>
         <CardTitle>
-          {campaignName ? `${campaignName} - Weekly Trends` : 'Campaign Performance Trends'}
+          {campaignName ? `${campaignName} - Cumulative Weekly Trends` : 'Campaign Performance Trends (Cumulative)'}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
+          <LineChart data={cumulativeData}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis 
               dataKey="week" 
@@ -46,16 +58,18 @@ export const WeeklyTrendChart = ({ data, campaignName, goalAppointments }: Weekl
               }}
             />
             <Legend />
-            {weeklyGoal && (
-              <ReferenceLine 
-                y={weeklyGoal} 
+            {goalAppointments && (
+              <Line 
+                type="monotone" 
+                dataKey="target" 
                 stroke="#ef4444" 
-                strokeDasharray="5 5" 
                 strokeWidth={2}
-                label={{ value: 'Weekly Goal', position: 'right', fill: '#ef4444', fontSize: 12 }}
+                strokeDasharray="5 5"
+                name="Target (Cumulative)"
+                dot={false}
               />
             )}
-            <Line 
+            <Line
               type="monotone" 
               dataKey="leads" 
               stroke="hsl(var(--chart-1))" 

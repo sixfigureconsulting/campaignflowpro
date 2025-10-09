@@ -15,10 +15,10 @@ interface GoalsSectionProps {
 }
 
 export const GoalsSection = ({ onGoalsUpdate }: GoalsSectionProps) => {
-  const [targetAppointments, setTargetAppointments] = useState(10);
+  const [targetAppointments, setTargetAppointments] = useState(270);
   const [targetResponseRate, setTargetResponseRate] = useState(5);
-  const [targetVolume, setTargetVolume] = useState(5000);
-  const [allocatedBudget, setAllocatedBudget] = useState(100);
+  const [targetVolume, setTargetVolume] = useState(60000);
+  const [allocatedBudget, setAllocatedBudget] = useState(5200);
   const [isSaved, setIsSaved] = useState(false);
 
   const handleSave = () => {
@@ -38,7 +38,7 @@ export const GoalsSection = ({ onGoalsUpdate }: GoalsSectionProps) => {
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="targetAppointments">Target Appointments (Monthly)</Label>
+            <Label htmlFor="targetAppointments">Target Appointments (Yearly)</Label>
             <Input
               id="targetAppointments"
               type="number"
@@ -59,7 +59,7 @@ export const GoalsSection = ({ onGoalsUpdate }: GoalsSectionProps) => {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="targetVolume">Target Leads Targeted (Monthly)</Label>
+            <Label htmlFor="targetVolume">Target Leads Targeted (Yearly)</Label>
             <Input
               id="targetVolume"
               type="number"
@@ -70,7 +70,7 @@ export const GoalsSection = ({ onGoalsUpdate }: GoalsSectionProps) => {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="allocatedBudget">Allocated Budget (Monthly)</Label>
+            <Label htmlFor="allocatedBudget">Allocated Budget (Yearly)</Label>
             <Input
               id="allocatedBudget"
               type="number"

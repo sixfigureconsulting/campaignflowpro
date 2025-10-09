@@ -110,14 +110,14 @@ const Index = () => {
     infrastructure: { totalMailboxes: number; totalLinkedInAccounts: number };
   }>>({
     "campaign-1": {
-      goals: { targetAppointments: 10, targetResponseRate: 5, targetVolume: 5000, allocatedBudget: 100 },
+      goals: { targetAppointments: 270, targetResponseRate: 5, targetVolume: 60000, allocatedBudget: 5200 },
       infrastructure: { totalMailboxes: 5, totalLinkedInAccounts: 2 }
     }
   });
 
   // Get current campaign data
   const currentData = campaignData[activeTab] || {
-    goals: { targetAppointments: 10, targetResponseRate: 5, targetVolume: 5000, allocatedBudget: 100 },
+    goals: { targetAppointments: 270, targetResponseRate: 5, targetVolume: 60000, allocatedBudget: 5200 },
     infrastructure: { totalMailboxes: 5, totalLinkedInAccounts: 2 }
   };
   
@@ -255,15 +255,15 @@ const Index = () => {
     }];
   }, [totalLeads, totalAppointments, totalReplies, responseRate, conversionRate, goals]);
 
+  const weeksCompleted = useMemo(() => {
+    return (weeklyTabs[activeTab] || []).length;
+  }, [weeklyTabs, activeTab]);
+
   const predictiveData = {
     currentPace: {
-      appointmentsPerWeek: totalAppointments / 4,
+      appointmentsPerWeek: weeksCompleted > 0 ? totalAppointments / weeksCompleted : 0,
       responseRate: parseFloat(responseRate),
-      weeklyOutreachVolume: Math.round(totalLeads / 4),
-    },
-    projectedOutcome: {
-      monthlyAppointments: totalAppointments,
-      confidence: 87,
+      weeklyOutreachVolume: weeksCompleted > 0 ? Math.round(totalLeads / weeksCompleted) : 0,
     },
   };
   
@@ -278,7 +278,7 @@ const Index = () => {
     setCampaignData(prev => ({
       ...prev,
       [newId]: {
-        goals: { targetAppointments: 10, targetResponseRate: 5, targetVolume: 5000, allocatedBudget: 100 },
+        goals: { targetAppointments: 270, targetResponseRate: 5, targetVolume: 60000, allocatedBudget: 5200 },
         infrastructure: { totalMailboxes: 5, totalLinkedInAccounts: 2 }
       }
     }));
@@ -364,16 +364,21 @@ const Index = () => {
     }));
   };
 
-  // Generate graph data for current week
+  // Generate cumulative graph data across all weeks
   const displayData = useMemo(() => {
-    const currentWeekNumber = weeklyTabs[activeTab]?.find(w => w.id === currentWeekId)?.weekNumber || 1;
-    return [{
-      week: `Week ${currentWeekNumber}`,
-      leads: currentWeekData.leads,
-      responses: currentWeekData.replies,
-      appointments: currentWeekData.appointments,
-    }];
-  }, [currentWeekId, currentWeekData, weeklyTabs, activeTab]);
+    const weeks = weeklyTabs[activeTab] || [];
+    const data = weeklyData[activeTab] || {};
+    
+    return weeks.map(week => {
+      const weekData = data[week.id] || { leads: 0, replies: 0, appointments: 0 };
+      return {
+        week: `Week ${week.weekNumber}`,
+        leads: weekData.leads,
+        responses: weekData.replies,
+        appointments: weekData.appointments,
+      };
+    });
+  }, [weeklyTabs, weeklyData, activeTab]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -491,11 +496,11 @@ const Index = () => {
               {/* Current Outbound Performance */}
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
-                  Total Campaign Status (October)
+                  Current Outbound Performance
                 </h2>
                 
                 {/* Key Metrics */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <MetricCard
                   title="Total Leads Generated"
                   value={totalLeads}
@@ -524,13 +529,6 @@ const Index = () => {
                   subtitle="auto-calculated"
                   icon={<TrendingUp className="w-4 h-4" />}
                 />
-                <MetricCard
-                  title="Conversion Rate"
-                  value={`${conversionRate}%`}
-                  change={0}
-                  subtitle="reply to appointment"
-                  icon={<Target className="w-4 h-4" />}
-                />
                 </div>
               </div>
 
@@ -557,8 +555,17 @@ const Index = () => {
               {/* Budget & Performance Projections */}
               <PredictiveBudgetAnalytics
                 allocatedBudget={goals.allocatedBudget}
+                yearlyGoals={{
+                  targetAppointments: goals.targetAppointments,
+                  targetLeads: goals.targetVolume,
+                }}
+                currentPerformance={{
+                  totalAppointments,
+                  totalLeads,
+                  totalReplies,
+                  weeksCompleted,
+                }}
                 currentPace={predictiveData.currentPace}
-                projectedOutcome={predictiveData.projectedOutcome}
               />
 
               {/* Actionable Recommendations */}

@@ -3,35 +3,60 @@ import { TrendingUp, DollarSign, Users, Mail } from "lucide-react";
 
 interface PredictiveBudgetAnalyticsProps {
   allocatedBudget: number;
+  yearlyGoals: {
+    targetAppointments: number;
+    targetLeads: number;
+  };
+  currentPerformance: {
+    totalAppointments: number;
+    totalLeads: number;
+    totalReplies: number;
+    weeksCompleted: number;
+  };
   currentPace: {
     appointmentsPerWeek: number;
     responseRate: number;
     weeklyOutreachVolume: number;
   };
-  projectedOutcome: {
-    monthlyAppointments: number;
-    confidence: number;
-  };
 }
 
 export const PredictiveBudgetAnalytics = ({
   allocatedBudget,
+  yearlyGoals,
+  currentPerformance,
   currentPace,
-  projectedOutcome,
 }: PredictiveBudgetAnalyticsProps) => {
   const costPerLead = 100 / 5000;
   const costPerMailbox = 3.5;
   
-  const budgetForLeads = allocatedBudget * 0.7;
-  const budgetForMailboxes = allocatedBudget * 0.3;
+  // Calculate weekly targets based on yearly goals (52 weeks in a year)
+  const weeksInYear = 52;
+  const weeklyAppointmentTarget = yearlyGoals.targetAppointments / weeksInYear;
+  const weeklyLeadsTarget = yearlyGoals.targetLeads / weeksInYear;
   
-  const targetedLeads = Math.floor(budgetForLeads / costPerLead);
-  const mailboxes = Math.floor(budgetForMailboxes / costPerMailbox);
+  // Calculate deficit accounting for accumulation
+  const weeksCompleted = currentPerformance.weeksCompleted || 1;
+  const expectedAppointmentsByNow = weeklyAppointmentTarget * weeksCompleted;
+  const appointmentDeficit = Math.max(0, expectedAppointmentsByNow - currentPerformance.totalAppointments);
   
-  const projectedWeeklyLeads = targetedLeads / 4;
-  const projectedResponseRate = currentPace.responseRate;
-  const projectedWeeklyReplies = projectedWeeklyLeads * (projectedResponseRate / 100);
-  const projectedMonthlyAppointments = Math.round(projectedWeeklyReplies * 4 * 0.45);
+  // Remaining weeks in the year
+  const remainingWeeks = weeksInYear - weeksCompleted;
+  
+  // Adjusted weekly target to catch up
+  const adjustedWeeklyTarget = remainingWeeks > 0 
+    ? (yearlyGoals.targetAppointments - currentPerformance.totalAppointments) / remainingWeeks 
+    : 0;
+  
+  // Budget calculations
+  const yearlyBudgetForLeads = allocatedBudget * 0.7;
+  const yearlyBudgetForMailboxes = allocatedBudget * 0.3;
+  
+  const targetedLeadsYearly = Math.floor(yearlyBudgetForLeads / costPerLead);
+  const mailboxes = Math.floor(yearlyBudgetForMailboxes / costPerMailbox);
+  
+  // Progress tracking
+  const appointmentProgress = (currentPerformance.totalAppointments / yearlyGoals.targetAppointments) * 100;
+  const leadsProgress = (currentPerformance.totalLeads / yearlyGoals.targetLeads) * 100;
 
   return (
     <Card className="shadow-primary-md border-primary/10">
@@ -41,21 +66,77 @@ export const PredictiveBudgetAnalytics = ({
           Budget & Performance Projections
         </CardTitle>
         <CardDescription>
-          Estimates based on ${allocatedBudget} monthly budget and current performance
+          Yearly budget: ${allocatedBudget.toLocaleString()} | Weeks completed: {weeksCompleted} of {weeksInYear}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Budget Allocation */}
+        {/* Progress Tracking */}
         <div className="space-y-3">
-          <h3 className="font-semibold text-sm text-muted-foreground">Budget Allocation</h3>
+          <h3 className="font-semibold text-sm text-muted-foreground">Goal Progress</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Appointments</span>
+                <span className="font-semibold">{currentPerformance.totalAppointments} / {yearlyGoals.targetAppointments}</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2">
+                <div 
+                  className="bg-primary rounded-full h-2 transition-all" 
+                  style={{ width: `${Math.min(appointmentProgress, 100)}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">{appointmentProgress.toFixed(1)}% complete</p>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Leads</span>
+                <span className="font-semibold">{currentPerformance.totalLeads} / {yearlyGoals.targetLeads}</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2">
+                <div 
+                  className="bg-primary rounded-full h-2 transition-all" 
+                  style={{ width: `${Math.min(leadsProgress, 100)}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">{leadsProgress.toFixed(1)}% complete</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Deficit & Catch-Up Plan */}
+        <div className="space-y-3 pt-4 border-t">
+          <h3 className="font-semibold text-sm text-muted-foreground">Deficit Analysis</h3>
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Appointment Deficit</span>
+              <span className="text-2xl font-bold text-destructive">{appointmentDeficit.toFixed(1)}</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Behind schedule by {appointmentDeficit.toFixed(1)} appointments
+            </p>
+          </div>
+          <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Adjusted Weekly Target</span>
+              <span className="text-2xl font-bold text-primary">{adjustedWeeklyTarget.toFixed(1)}</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Need {adjustedWeeklyTarget.toFixed(1)} appointments/week for remaining {remainingWeeks} weeks
+            </p>
+          </div>
+        </div>
+
+        {/* Budget Allocation */}
+        <div className="space-y-3 pt-4 border-t">
+          <h3 className="font-semibold text-sm text-muted-foreground">Yearly Budget Allocation</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-sm">
                 <Users className="w-4 h-4 text-primary" />
-                <span className="font-medium">Targeted Leads</span>
+                <span className="font-medium">Targeted Leads (Yearly)</span>
               </div>
-              <p className="text-2xl font-bold">{targetedLeads.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">${budgetForLeads.toFixed(2)} allocated</p>
+              <p className="text-2xl font-bold">{targetedLeadsYearly.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">${yearlyBudgetForLeads.toFixed(2)} allocated</p>
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-sm">
@@ -63,7 +144,7 @@ export const PredictiveBudgetAnalytics = ({
                 <span className="font-medium">Mailboxes</span>
               </div>
               <p className="text-2xl font-bold">{mailboxes}</p>
-              <p className="text-xs text-muted-foreground">${budgetForMailboxes.toFixed(2)} allocated</p>
+              <p className="text-xs text-muted-foreground">${yearlyBudgetForMailboxes.toFixed(2)} allocated</p>
             </div>
           </div>
         </div>
@@ -83,21 +164,6 @@ export const PredictiveBudgetAnalytics = ({
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">Appointments</p>
               <p className="text-lg font-bold">{currentPace.appointmentsPerWeek.toFixed(1)}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Projections */}
-        <div className="space-y-3 pt-4 border-t">
-          <h3 className="font-semibold text-sm text-muted-foreground">30-Day Projection</h3>
-          <div className="bg-primary/5 rounded-lg p-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Projected Monthly Appointments</span>
-              <span className="text-2xl font-bold text-primary">{projectedMonthlyAppointments}</span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Based on {projectedResponseRate.toFixed(1)}% response rate</span>
-              <span className="text-muted-foreground">Confidence: {projectedOutcome.confidence}%</span>
             </div>
           </div>
         </div>
