@@ -2,18 +2,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { TrendingUp, DollarSign, Users, Mail } from "lucide-react";
 
 interface PredictiveBudgetAnalyticsProps {
-  allocatedBudget: number;
-  yearlyGoals: {
+  allocatedBudget?: number;
+  yearlyGoals?: {
     targetAppointments: number;
     targetLeads: number;
   };
-  currentPerformance: {
+  currentPerformance?: {
     totalAppointments: number;
     totalLeads: number;
     totalReplies: number;
     weeksCompleted: number;
   };
-  currentPace: {
+  currentPace?: {
     appointmentsPerWeek: number;
     responseRate: number;
     weeklyOutreachVolume: number;
@@ -21,30 +21,30 @@ interface PredictiveBudgetAnalyticsProps {
 }
 
 export const PredictiveBudgetAnalytics = ({
-  allocatedBudget,
-  yearlyGoals,
-  currentPerformance,
-  currentPace,
+  allocatedBudget = 0,
+  yearlyGoals = { targetAppointments: 0, targetLeads: 0 },
+  currentPerformance = { totalAppointments: 0, totalLeads: 0, totalReplies: 0, weeksCompleted: 1 },
+  currentPace = { appointmentsPerWeek: 0, responseRate: 0, weeklyOutreachVolume: 0 },
 }: PredictiveBudgetAnalyticsProps) => {
   const costPerLead = 100 / 5000;
   const costPerMailbox = 3.5;
   
   // Calculate weekly targets based on yearly goals (52 weeks in a year)
   const weeksInYear = 52;
-  const weeklyAppointmentTarget = yearlyGoals.targetAppointments / weeksInYear;
-  const weeklyLeadsTarget = yearlyGoals.targetLeads / weeksInYear;
+  const weeklyAppointmentTarget = (yearlyGoals?.targetAppointments || 0) / weeksInYear;
+  const weeklyLeadsTarget = (yearlyGoals?.targetLeads || 0) / weeksInYear;
   
   // Calculate deficit accounting for accumulation
-  const weeksCompleted = currentPerformance.weeksCompleted || 1;
+  const weeksCompleted = currentPerformance?.weeksCompleted || 1;
   const expectedAppointmentsByNow = weeklyAppointmentTarget * weeksCompleted;
-  const appointmentDeficit = Math.max(0, expectedAppointmentsByNow - currentPerformance.totalAppointments);
+  const appointmentDeficit = Math.max(0, expectedAppointmentsByNow - (currentPerformance?.totalAppointments || 0));
   
   // Remaining weeks in the year
   const remainingWeeks = weeksInYear - weeksCompleted;
   
   // Adjusted weekly target to catch up
   const adjustedWeeklyTarget = remainingWeeks > 0 
-    ? (yearlyGoals.targetAppointments - currentPerformance.totalAppointments) / remainingWeeks 
+    ? ((yearlyGoals?.targetAppointments || 0) - (currentPerformance?.totalAppointments || 0)) / remainingWeeks 
     : 0;
   
   // Budget calculations
@@ -55,8 +55,12 @@ export const PredictiveBudgetAnalytics = ({
   const mailboxes = Math.floor(yearlyBudgetForMailboxes / costPerMailbox);
   
   // Progress tracking
-  const appointmentProgress = (currentPerformance.totalAppointments / yearlyGoals.targetAppointments) * 100;
-  const leadsProgress = (currentPerformance.totalLeads / yearlyGoals.targetLeads) * 100;
+  const appointmentProgress = (yearlyGoals?.targetAppointments || 0) > 0 
+    ? ((currentPerformance?.totalAppointments || 0) / (yearlyGoals?.targetAppointments || 1)) * 100 
+    : 0;
+  const leadsProgress = (yearlyGoals?.targetLeads || 0) > 0 
+    ? ((currentPerformance?.totalLeads || 0) / (yearlyGoals?.targetLeads || 1)) * 100 
+    : 0;
 
   return (
     <Card className="shadow-primary-md border-primary/10">
@@ -77,7 +81,7 @@ export const PredictiveBudgetAnalytics = ({
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Appointments</span>
-                <span className="font-semibold">{currentPerformance.totalAppointments} / {yearlyGoals.targetAppointments}</span>
+                <span className="font-semibold">{currentPerformance?.totalAppointments || 0} / {yearlyGoals?.targetAppointments || 0}</span>
               </div>
               <div className="w-full bg-muted rounded-full h-2">
                 <div 
@@ -90,7 +94,7 @@ export const PredictiveBudgetAnalytics = ({
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Leads</span>
-                <span className="font-semibold">{currentPerformance.totalLeads} / {yearlyGoals.targetLeads}</span>
+                <span className="font-semibold">{currentPerformance?.totalLeads || 0} / {yearlyGoals?.targetLeads || 0}</span>
               </div>
               <div className="w-full bg-muted rounded-full h-2">
                 <div 
@@ -155,15 +159,15 @@ export const PredictiveBudgetAnalytics = ({
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">Outreach</p>
-              <p className="text-lg font-bold">{Math.round(currentPace.weeklyOutreachVolume)}</p>
+              <p className="text-lg font-bold">{Math.round(currentPace?.weeklyOutreachVolume || 0)}</p>
             </div>
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">Response Rate</p>
-              <p className="text-lg font-bold">{currentPace.responseRate.toFixed(1)}%</p>
+              <p className="text-lg font-bold">{(currentPace?.responseRate || 0).toFixed(1)}%</p>
             </div>
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">Appointments</p>
-              <p className="text-lg font-bold">{currentPace.appointmentsPerWeek.toFixed(1)}</p>
+              <p className="text-lg font-bold">{(currentPace?.appointmentsPerWeek || 0).toFixed(1)}</p>
             </div>
           </div>
         </div>
