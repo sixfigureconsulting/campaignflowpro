@@ -78,6 +78,7 @@ const Index = () => {
   const [selectedCampaign, setSelectedCampaign] = useState<string>("all");
   const [brandColor, setBrandColor] = useState("#4F46E5");
   const [logo, setLogo] = useState("");
+  const [clientName, setClientName] = useState("CampaignFlow Pro");
   
   // Campaign tabs state
   const [campaignTabs, setCampaignTabs] = useState<CampaignTab[]>([
@@ -387,12 +388,16 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {logo && (
-                <img src={logo} alt="Company Logo" className="h-10 w-auto rounded" />
+              {logo ? (
+                <img src={logo} alt="Company Logo" className="h-12 w-auto rounded" />
+              ) : (
+                <div className="h-12 w-12 rounded bg-muted flex items-center justify-center border-2 border-dashed border-muted-foreground/30">
+                  <span className="text-xs text-muted-foreground">Logo</span>
+                </div>
               )}
               <div>
-                <h1 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
-                  CampaignFlow Pro
+                <h1 className="text-2xl font-bold text-foreground">
+                  {clientName}
                 </h1>
                 <p className="text-sm text-muted-foreground">B2B Cold Outreach Analytics</p>
               </div>
@@ -423,8 +428,11 @@ const Index = () => {
                 <PopoverContent className="w-80">
                   <CustomizationPanel
                     currentColor={brandColor}
+                    currentClientName={clientName}
+                    currentLogo={logo}
                     onColorChange={setBrandColor}
                     onLogoChange={setLogo}
+                    onClientNameChange={setClientName}
                   />
                 </PopoverContent>
               </Popover>

@@ -8,16 +8,32 @@ import { useState } from "react";
 interface CustomizationPanelProps {
   onColorChange: (color: string) => void;
   onLogoChange: (logo: string) => void;
+  onClientNameChange: (name: string) => void;
   currentColor: string;
+  currentClientName: string;
+  currentLogo: string;
 }
 
-export const CustomizationPanel = ({ onColorChange, onLogoChange, currentColor }: CustomizationPanelProps) => {
+export const CustomizationPanel = ({ 
+  onColorChange, 
+  onLogoChange, 
+  onClientNameChange,
+  currentColor,
+  currentClientName,
+  currentLogo 
+}: CustomizationPanelProps) => {
   const [color, setColor] = useState(currentColor);
-  const [logoPreview, setLogoPreview] = useState<string>("");
+  const [clientName, setClientName] = useState(currentClientName);
+  const [logoPreview, setLogoPreview] = useState<string>(currentLogo);
 
   const handleColorChange = (newColor: string) => {
     setColor(newColor);
     onColorChange(newColor);
+  };
+
+  const handleClientNameChange = (newName: string) => {
+    setClientName(newName);
+    onClientNameChange(newName);
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,6 +58,18 @@ export const CustomizationPanel = ({ onColorChange, onLogoChange, currentColor }
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="clientName">Client Name</Label>
+          <Input
+            id="clientName"
+            type="text"
+            value={clientName}
+            onChange={(e) => handleClientNameChange(e.target.value)}
+            placeholder="Enter client name"
+            className="text-lg font-semibold"
+          />
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="brandColor">Brand Color</Label>
           <div className="flex gap-2">
