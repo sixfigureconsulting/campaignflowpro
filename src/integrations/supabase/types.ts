@@ -14,7 +14,177 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      campaigns: {
+        Row: {
+          allocated_budget: number
+          created_at: string | null
+          id: string
+          name: string
+          project_id: string
+          start_date: string
+          target_leads: number
+          updated_at: string | null
+        }
+        Insert: {
+          allocated_budget: number
+          created_at?: string | null
+          id?: string
+          name: string
+          project_id: string
+          start_date: string
+          target_leads: number
+          updated_at?: string | null
+        }
+        Update: {
+          allocated_budget?: number
+          created_at?: string | null
+          id?: string
+          name?: string
+          project_id?: string
+          start_date?: string
+          target_leads?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      infrastructure: {
+        Row: {
+          created_at: string | null
+          id: string
+          linkedin_accounts: number
+          mailboxes: number
+          project_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          linkedin_accounts?: number
+          mailboxes?: number
+          project_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          linkedin_accounts?: number
+          mailboxes?: number
+          project_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "infrastructure_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          brand_color: string | null
+          client_name: string | null
+          created_at: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          brand_color?: string | null
+          client_name?: string | null
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          brand_color?: string | null
+          client_name?: string | null
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      weekly_data: {
+        Row: {
+          campaign_id: string
+          created_at: string | null
+          id: string
+          leads_contacted: number
+          updated_at: string | null
+          week_number: number
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string | null
+          id?: string
+          leads_contacted?: number
+          updated_at?: string | null
+          week_number: number
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string | null
+          id?: string
+          leads_contacted?: number
+          updated_at?: string | null
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_data_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
