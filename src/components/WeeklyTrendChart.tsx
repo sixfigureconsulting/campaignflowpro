@@ -56,6 +56,9 @@ export const WeeklyTrendChart = ({ data, campaignName, goalAppointments }: Weekl
                 border: '1px solid hsl(var(--border))',
                 borderRadius: '8px',
               }}
+              formatter={(value: number) => {
+                return typeof value === 'number' ? value.toFixed(1) : value;
+              }}
             />
             <Legend />
             {goalAppointments && (

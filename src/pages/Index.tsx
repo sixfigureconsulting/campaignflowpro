@@ -80,6 +80,40 @@ const Index = () => {
   const [logo, setLogo] = useState("");
   const [clientName, setClientName] = useState("CampaignFlow Pro");
   
+  // Apply brand color to CSS variables
+  useEffect(() => {
+    const root = document.documentElement;
+    const hex = brandColor.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    
+    // Convert RGB to HSL
+    const rNorm = r / 255;
+    const gNorm = g / 255;
+    const bNorm = b / 255;
+    const max = Math.max(rNorm, gNorm, bNorm);
+    const min = Math.min(rNorm, gNorm, bNorm);
+    let h = 0, s = 0, l = (max + min) / 2;
+    
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case rNorm: h = ((gNorm - bNorm) / d + (gNorm < bNorm ? 6 : 0)) / 6; break;
+        case gNorm: h = ((bNorm - rNorm) / d + 2) / 6; break;
+        case bNorm: h = ((rNorm - gNorm) / d + 4) / 6; break;
+      }
+    }
+    
+    const hslH = Math.round(h * 360);
+    const hslS = Math.round(s * 100);
+    const hslL = Math.round(l * 100);
+    
+    root.style.setProperty('--primary', `${hslH} ${hslS}% ${hslL}%`);
+    root.style.setProperty('--chart-1', `${hslH} ${hslS}% ${hslL}%`);
+  }, [brandColor]);
+  
   // Campaign tabs state
   const [campaignTabs, setCampaignTabs] = useState<CampaignTab[]>([
     { id: "campaign-1", name: "Campaign 1" }
