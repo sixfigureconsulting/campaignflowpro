@@ -7,6 +7,10 @@ interface PredictiveBudgetAnalyticsProps {
     targetAppointments: number;
     targetLeads: number;
   };
+  infrastructure?: {
+    totalMailboxes: number;
+    totalLinkedInAccounts: number;
+  };
   currentPerformance?: {
     totalAppointments: number;
     totalLeads: number;
@@ -17,18 +21,17 @@ interface PredictiveBudgetAnalyticsProps {
     appointmentsPerWeek: number;
     responseRate: number;
     weeklyOutreachVolume: number;
+    avgDailyVolume: number;
   };
 }
 
 export const PredictiveBudgetAnalytics = ({
   allocatedBudget = 0,
   yearlyGoals = { targetAppointments: 0, targetLeads: 0 },
+  infrastructure = { totalMailboxes: 0, totalLinkedInAccounts: 0 },
   currentPerformance = { totalAppointments: 0, totalLeads: 0, totalReplies: 0, weeksCompleted: 1 },
-  currentPace = { appointmentsPerWeek: 0, responseRate: 0, weeklyOutreachVolume: 0 },
+  currentPace = { appointmentsPerWeek: 0, responseRate: 0, weeklyOutreachVolume: 0, avgDailyVolume: 0 },
 }: PredictiveBudgetAnalyticsProps) => {
-  const costPerLead = 100 / 5000;
-  const costPerMailbox = 3.5;
-  
   // Calculate weekly targets based on yearly goals (52 weeks in a year)
   const weeksInYear = 52;
   const weeklyAppointmentTarget = (yearlyGoals?.targetAppointments || 0) / weeksInYear;
@@ -46,13 +49,6 @@ export const PredictiveBudgetAnalytics = ({
   const adjustedWeeklyTarget = remainingWeeks > 0 
     ? ((yearlyGoals?.targetAppointments || 0) - (currentPerformance?.totalAppointments || 0)) / remainingWeeks 
     : 0;
-  
-  // Budget calculations
-  const yearlyBudgetForLeads = allocatedBudget * 0.7;
-  const yearlyBudgetForMailboxes = allocatedBudget * 0.3;
-  
-  const targetedLeadsYearly = Math.floor(yearlyBudgetForLeads / costPerLead);
-  const mailboxes = Math.floor(yearlyBudgetForMailboxes / costPerMailbox);
   
   // Progress tracking
   const appointmentProgress = (yearlyGoals?.targetAppointments || 0) > 0 
@@ -133,22 +129,34 @@ export const PredictiveBudgetAnalytics = ({
         {/* Budget Allocation */}
         <div className="space-y-3 pt-4 border-t">
           <h3 className="font-semibold text-sm text-muted-foreground">Yearly Budget Allocation</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2 mb-4">
+            <div className="flex items-center gap-2 text-sm">
+              <DollarSign className="w-4 h-4 text-primary" />
+              <span className="font-medium">Allocated Budget (Yearly)</span>
+            </div>
+            <p className="text-2xl font-bold">${allocatedBudget.toLocaleString()}</p>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-sm">
                 <Users className="w-4 h-4 text-primary" />
-                <span className="font-medium">Targeted Leads (Yearly)</span>
+                <span className="font-medium">Targeted Leads</span>
               </div>
-              <p className="text-2xl font-bold">{targetedLeadsYearly.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">${yearlyBudgetForLeads.toFixed(2)} allocated</p>
+              <p className="text-2xl font-bold">{(yearlyGoals?.targetLeads || 0).toLocaleString()}</p>
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-sm">
                 <Mail className="w-4 h-4 text-primary" />
                 <span className="font-medium">Mailboxes</span>
               </div>
-              <p className="text-2xl font-bold">{mailboxes}</p>
-              <p className="text-xs text-muted-foreground">${yearlyBudgetForMailboxes.toFixed(2)} allocated</p>
+              <p className="text-2xl font-bold">{infrastructure?.totalMailboxes || 0}</p>
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-sm">
+                <Users className="w-4 h-4 text-primary" />
+                <span className="font-medium">LinkedIn Accounts</span>
+              </div>
+              <p className="text-2xl font-bold">{infrastructure?.totalLinkedInAccounts || 0}</p>
             </div>
           </div>
         </div>
@@ -156,7 +164,11 @@ export const PredictiveBudgetAnalytics = ({
         {/* Current Performance */}
         <div className="space-y-3 pt-4 border-t">
           <h3 className="font-semibold text-sm text-muted-foreground">Current Pace (Weekly Avg)</h3>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 gap-3">
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Daily Volume</p>
+              <p className="text-lg font-bold">{(currentPace?.avgDailyVolume || 0).toFixed(1)}</p>
+            </div>
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">Outreach</p>
               <p className="text-lg font-bold">{Math.round(currentPace?.weeklyOutreachVolume || 0)}</p>
@@ -169,15 +181,6 @@ export const PredictiveBudgetAnalytics = ({
               <p className="text-xs text-muted-foreground">Appointments</p>
               <p className="text-lg font-bold">{(currentPace?.appointmentsPerWeek || 0).toFixed(1)}</p>
             </div>
-          </div>
-        </div>
-
-        {/* Cost Breakdown */}
-        <div className="space-y-2 pt-4 border-t">
-          <h3 className="font-semibold text-sm text-muted-foreground">Pricing Details</h3>
-          <div className="text-xs space-y-1 text-muted-foreground">
-            <p>• 5,000 enriched leads = $100</p>
-            <p>• Mailbox cost = $3.50 per mailbox</p>
           </div>
         </div>
       </CardContent>

@@ -4,6 +4,7 @@ import { EditableMetricCard } from "@/components/EditableMetricCard";
 import { ActionableInsights } from "@/components/ActionableInsights";
 import { PredictiveBudgetAnalytics } from "@/components/PredictiveBudgetAnalytics";
 import { WeeklyTrendChart } from "@/components/WeeklyTrendChart";
+import { WeeklyVolumeTable } from "@/components/WeeklyVolumeTable";
 import { GoalsSection } from "@/components/GoalsSection";
 import { CustomizationPanel } from "@/components/CustomizationPanel";
 import { BudgetAllocation } from "@/components/BudgetAllocation";
@@ -294,11 +295,23 @@ const Index = () => {
     return (weeklyTabs[activeTab] || []).length;
   }, [weeklyTabs, activeTab]);
 
+  // Calculate average daily volume across all weeks
+  const avgDailyVolume = useMemo(() => {
+    const weeks = weeklyTabs[activeTab] || [];
+    const data = weeklyData[activeTab] || {};
+    const totalDailyVolumes = weeks.reduce((sum, week) => {
+      const weekData = data[week.id] || { leads: 0 };
+      return sum + (weekData.leads / 5);
+    }, 0);
+    return weeks.length > 0 ? totalDailyVolumes / weeks.length : 0;
+  }, [weeklyTabs, weeklyData, activeTab]);
+
   const predictiveData = {
     currentPace: {
       appointmentsPerWeek: weeksCompleted > 0 ? totalAppointments / weeksCompleted : 0,
       responseRate: parseFloat(responseRate),
       weeklyOutreachVolume: weeksCompleted > 0 ? Math.round(totalLeads / weeksCompleted) : 0,
+      avgDailyVolume,
     },
   };
   
@@ -422,13 +435,30 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {logo ? (
-                <img src={logo} alt="Company Logo" className="h-12 w-auto rounded" />
-              ) : (
-                <div className="h-12 w-12 rounded bg-muted flex items-center justify-center border-2 border-dashed border-muted-foreground/30">
-                  <span className="text-xs text-muted-foreground">Logo</span>
-                </div>
-              )}
+              <label className="cursor-pointer group relative">
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setLogo(reader.result as string);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+                {logo ? (
+                  <img src={logo} alt="Company Logo" className="h-12 w-auto rounded group-hover:opacity-80 transition-opacity" />
+                ) : (
+                  <div className="h-12 w-12 rounded bg-muted flex items-center justify-center border-2 border-dashed border-muted-foreground/30 group-hover:border-primary group-hover:bg-primary/5 transition-colors">
+                    <span className="text-xs text-muted-foreground">Logo</span>
+                  </div>
+                )}
+              </label>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">
                   {clientName}
@@ -492,6 +522,9 @@ const Index = () => {
                 campaignName={campaignTabs.find(t => t.id === activeTab)?.name}
                 goalAppointments={goals.targetAppointments}
               />
+              
+              {/* Weekly Volume Table */}
+              <WeeklyVolumeTable data={displayData} />
 
               {/* Weekly Tabs with Inputs */}
               <div className="space-y-4">
@@ -601,6 +634,7 @@ const Index = () => {
                   targetAppointments: goals.targetAppointments,
                   targetLeads: goals.targetVolume,
                 }}
+                infrastructure={infrastructure}
                 currentPerformance={{
                   totalAppointments,
                   totalLeads,
