@@ -14,7 +14,8 @@ import { WeeklyTabs, WeekTab } from "@/components/WeeklyTabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Users, Calendar, TrendingUp, Target, Plus, Settings, MessageSquare, FolderPlus } from "lucide-react";
+import { Users, Calendar, TrendingUp, Target, Plus, Settings, MessageSquare, FolderPlus, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Sample data - in production, this would come from API/database
 const campaignData = [
@@ -76,6 +77,7 @@ const predictiveData = {
 };
 
 const Index = () => {
+  const { signOut } = useAuth();
   const [selectedCampaign, setSelectedCampaign] = useState<string>("all");
   const [brandColor, setBrandColor] = useState("#4F46E5");
   const [logo, setLogo] = useState("");
@@ -500,6 +502,14 @@ const Index = () => {
                   />
                 </PopoverContent>
               </Popover>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={signOut}
+                title="Sign out"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         </div>
