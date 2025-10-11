@@ -27,6 +27,29 @@ export default function Auth() {
     }
   }, [user, navigate]);
 
+  const getAuthErrorMessage = (error: any): string => {
+    const errorMap: Record<string, string> = {
+      'Invalid login credentials': 'Invalid email or password',
+      'User already registered': 'An account with this email already exists',
+      'Email not confirmed': 'Please confirm your email before signing in',
+      'Invalid email': 'Please enter a valid email address',
+      'Email rate limit exceeded': 'Too many attempts. Please try again later',
+      'Password should be at least': 'Password must be at least 6 characters',
+    };
+
+    const errorMsg = error?.message || '';
+    
+    // Check for known error patterns
+    for (const [pattern, userMsg] of Object.entries(errorMap)) {
+      if (errorMsg.includes(pattern)) {
+        return userMsg;
+      }
+    }
+    
+    // Generic fallback - never expose raw database errors
+    return 'Unable to complete authentication. Please try again.';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -75,7 +98,7 @@ export default function Auth() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "An error occurred",
+        description: getAuthErrorMessage(error),
         variant: "destructive",
       });
     } finally {
