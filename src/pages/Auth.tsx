@@ -16,6 +16,7 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -89,11 +90,11 @@ export default function Auth() {
 
         if (error) throw error;
 
+        setEmailSent(true);
         toast({
-          title: "Success",
-          description: "Account created successfully! You can now log in.",
+          title: "Check your email",
+          description: "We've sent you a verification link. Please check your inbox and verify your email to continue.",
         });
-        setIsLogin(true);
       }
     } catch (error: any) {
       toast({
@@ -105,6 +106,40 @@ export default function Auth() {
       setLoading(false);
     }
   };
+
+  if (emailSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Verify Your Email</CardTitle>
+            <CardDescription>
+              We've sent a verification link to {email}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Please check your email inbox and click the verification link to activate your account. 
+              Once verified, you can sign in to access your dashboard.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Didn't receive the email? Check your spam folder or contact support.
+            </p>
+            <Button 
+              onClick={() => {
+                setEmailSent(false);
+                setIsLogin(true);
+              }} 
+              variant="outline" 
+              className="w-full"
+            >
+              Back to Sign In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
