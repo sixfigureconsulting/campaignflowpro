@@ -39,9 +39,17 @@ export function useInfrastructure(projectId: string) {
       });
     },
     onError: (error: any) => {
+      let userMessage = error.message || "Failed to update infrastructure";
+      
+      if (error.message?.includes('infra_mailboxes_valid')) {
+        userMessage = "Mailboxes must be a non-negative number (0-1,000)";
+      } else if (error.message?.includes('infra_linkedin_valid')) {
+        userMessage = "LinkedIn accounts must be a non-negative number (0-1,000)";
+      }
+      
       toast({
         title: "Error",
-        description: error.message || "Failed to update infrastructure",
+        description: userMessage,
         variant: "destructive",
       });
     },

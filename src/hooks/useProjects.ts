@@ -58,9 +58,17 @@ export function useProjects() {
       });
     },
     onError: (error: any) => {
+      let userMessage = error.message || "Failed to create project";
+      
+      if (error.message?.includes('projects_name_not_empty')) {
+        userMessage = "Project name cannot be empty";
+      } else if (error.message?.includes('projects_name_max_length')) {
+        userMessage = "Project name must be less than 100 characters";
+      }
+      
       toast({
         title: "Error",
-        description: error.message || "Failed to create project",
+        description: userMessage,
         variant: "destructive",
       });
     },
@@ -86,9 +94,17 @@ export function useProjects() {
       });
     },
     onError: (error: any) => {
+      let userMessage = error.message || "Failed to update project";
+      
+      if (error.message?.includes('projects_name_not_empty')) {
+        userMessage = "Project name cannot be empty";
+      } else if (error.message?.includes('projects_name_max_length')) {
+        userMessage = "Project name must be less than 100 characters";
+      }
+      
       toast({
         title: "Error",
-        description: error.message || "Failed to update project",
+        description: userMessage,
         variant: "destructive",
       });
     },

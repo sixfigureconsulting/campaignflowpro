@@ -35,9 +35,17 @@ export function useWeeklyData(campaignId: string) {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
     onError: (error: any) => {
+      let userMessage = error.message || "Failed to update weekly data";
+      
+      if (error.message?.includes('weekly_week_number_valid')) {
+        userMessage = "Week number must be between 1 and 52";
+      } else if (error.message?.includes('weekly_leads_nonnegative')) {
+        userMessage = "Leads contacted must be a non-negative number (0-100,000)";
+      }
+      
       toast({
         title: "Error",
-        description: error.message || "Failed to update weekly data",
+        description: userMessage,
         variant: "destructive",
       });
     },

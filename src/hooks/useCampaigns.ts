@@ -40,9 +40,23 @@ export function useCampaigns(projectId: string) {
       });
     },
     onError: (error: any) => {
+      let userMessage = error.message || "Failed to create campaign";
+      
+      if (error.message?.includes('campaigns_name_not_empty')) {
+        userMessage = "Campaign name cannot be empty";
+      } else if (error.message?.includes('campaigns_name_max_length')) {
+        userMessage = "Campaign name must be less than 200 characters";
+      } else if (error.message?.includes('campaigns_target_leads_positive')) {
+        userMessage = "Target leads must be a positive number (1-1,000,000)";
+      } else if (error.message?.includes('campaigns_budget_positive')) {
+        userMessage = "Budget must be a positive amount (1-100,000,000)";
+      } else if (error.message?.includes('campaigns_date_realistic')) {
+        userMessage = "Start date must be between 2020 and 2050";
+      }
+      
       toast({
         title: "Error",
-        description: error.message || "Failed to create campaign",
+        description: userMessage,
         variant: "destructive",
       });
     },
@@ -74,9 +88,23 @@ export function useCampaigns(projectId: string) {
       });
     },
     onError: (error: any) => {
+      let userMessage = error.message || "Failed to update campaign";
+      
+      if (error.message?.includes('campaigns_name_not_empty')) {
+        userMessage = "Campaign name cannot be empty";
+      } else if (error.message?.includes('campaigns_name_max_length')) {
+        userMessage = "Campaign name must be less than 200 characters";
+      } else if (error.message?.includes('campaigns_target_leads_positive')) {
+        userMessage = "Target leads must be a positive number (1-1,000,000)";
+      } else if (error.message?.includes('campaigns_budget_positive')) {
+        userMessage = "Budget must be a positive amount (1-100,000,000)";
+      } else if (error.message?.includes('campaigns_date_realistic')) {
+        userMessage = "Start date must be between 2020 and 2050";
+      }
+      
       toast({
         title: "Error",
-        description: error.message || "Failed to update campaign",
+        description: userMessage,
         variant: "destructive",
       });
     },
