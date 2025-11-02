@@ -50,6 +50,13 @@ export type Database = {
             foreignKeyName: "campaigns_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
+            referencedRelation: "admin_all_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaigns_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
@@ -81,6 +88,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "infrastructure_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "admin_all_projects"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "infrastructure_project_id_fkey"
             columns: ["project_id"]
@@ -125,6 +139,13 @@ export type Database = {
           token?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "invitations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "admin_all_projects"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "invitations_project_id_fkey"
             columns: ["project_id"]
@@ -184,6 +205,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "admin_all_projects"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "project_members_project_id_fkey"
             columns: ["project_id"]
@@ -283,6 +311,13 @@ export type Database = {
             foreignKeyName: "weekly_data_campaign_id_fkey"
             columns: ["campaign_id"]
             isOneToOne: false
+            referencedRelation: "admin_all_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_data_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
             referencedRelation: "campaigns"
             referencedColumns: ["id"]
           },
@@ -290,7 +325,45 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_all_campaigns: {
+        Row: {
+          allocated_budget: number | null
+          campaign_name: string | null
+          client_name: string | null
+          created_at: string | null
+          id: string | null
+          owner_email: string | null
+          project_name: string | null
+          start_date: string | null
+          target_leads: number | null
+          user_id: string | null
+          weekly_data_count: number | null
+        }
+        Relationships: []
+      }
+      admin_all_projects: {
+        Row: {
+          campaign_count: number | null
+          client_name: string | null
+          created_at: string | null
+          id: string | null
+          name: string | null
+          owner_email: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      admin_system_overview: {
+        Row: {
+          total_campaigns: number | null
+          total_infrastructure_records: number | null
+          total_projects: number | null
+          total_users: number | null
+          total_weekly_records: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       accept_invitation: {
