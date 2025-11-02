@@ -6,6 +6,10 @@ import { LogOut, TrendingUp, Target, Users, Calendar } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProjects } from "@/hooks/useProjects";
 import { CreateProjectDialog } from "@/components/CreateProjectDialog";
+import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
+import { EditableWeeklyData } from "@/components/EditableWeeklyData";
+import { EditableInfrastructure } from "@/components/EditableInfrastructure";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Dashboard = () => {
   const { signOut, user } = useAuth();
@@ -147,6 +151,17 @@ const Dashboard = () => {
   const totalMailboxes = infrastructure?.mailboxes || 0;
   const totalLinkedInAccounts = infrastructure?.linkedin_accounts || 0;
 
+  // Campaign tabs state
+  const [activeCampaignTab, setActiveCampaignTab] = useState<string | undefined>(
+    campaigns[0]?.id
+  );
+
+  useEffect(() => {
+    if (campaigns.length > 0 && !activeCampaignTab) {
+      setActiveCampaignTab(campaigns[0].id);
+    }
+  }, [campaigns, activeCampaignTab]);
+
   // Main dashboard view
   return (
     <div className="min-h-screen bg-background">
@@ -212,59 +227,77 @@ const Dashboard = () => {
             />
           </div>
 
-          {/* Campaigns List */}
+          {/* Campaigns & Data Management */}
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Your Campaigns</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Campaign Management</h2>
+              {activeProject && (
+                <CreateCampaignDialog projectId={activeProject.id} />
+              )}
+            </div>
             
             {campaigns.length === 0 ? (
               <Alert>
                 <AlertDescription>
-                  No campaigns yet. Data you create will be saved securely to your database.
+                  No campaigns yet. Click "Add Campaign" to create your first campaign. All data will be saved securely to your database.
                 </AlertDescription>
               </Alert>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {campaigns.map((campaign: any) => {
-                  const weeklyData = campaign.weekly_data || [];
-                  const campaignLeads = weeklyData.reduce((sum: number, week: any) => 
-                    sum + (week.leads_contacted || 0), 0
-                  );
+              <Tabs value={activeCampaignTab} onValueChange={setActiveCampaignTab}>
+                <TabsList className="w-full justify-start">
+                  {campaigns.map((campaign: any) => (
+                    <TabsTrigger key={campaign.id} value={campaign.id}>
+                      {campaign.name}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
 
-                  return (
-                    <div key={campaign.id} className="border rounded-lg p-6 bg-card hover:shadow-md transition-shadow">
-                      <h3 className="font-semibold text-lg mb-2">{campaign.name}</h3>
-                      <div className="space-y-2 text-sm text-muted-foreground">
-                        <div className="flex justify-between">
-                          <span>Start Date:</span>
-                          <span className="font-medium text-foreground">
+                {campaigns.map((campaign: any) => (
+                  <TabsContent key={campaign.id} value={campaign.id} className="space-y-6">
+                    {/* Campaign Summary */}
+                    <div className="border rounded-lg p-6 bg-card">
+                      <h3 className="font-semibold text-lg mb-4">{campaign.name}</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">Start Date</p>
+                          <p className="font-medium">
                             {new Date(campaign.start_date).toLocaleDateString()}
-                          </span>
+                          </p>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Leads Contacted:</span>
-                          <span className="font-medium text-foreground">
-                            {campaignLeads.toLocaleString()} / {campaign.target_leads.toLocaleString()}
-                          </span>
+                        <div>
+                          <p className="text-muted-foreground">Target Leads</p>
+                          <p className="font-medium">{campaign.target_leads.toLocaleString()}</p>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Budget Allocated:</span>
-                          <span className="font-medium text-foreground">
-                            ${campaign.allocated_budget.toLocaleString()}
-                          </span>
+                        <div>
+                          <p className="text-muted-foreground">Budget</p>
+                          <p className="font-medium">${campaign.allocated_budget.toLocaleString()}</p>
                         </div>
-                        <div className="flex justify-between">
-                          <span>Weeks Tracked:</span>
-                          <span className="font-medium text-foreground">
-                            {weeklyData.length}
-                          </span>
+                        <div>
+                          <p className="text-muted-foreground">Weeks Active</p>
+                          <p className="font-medium">{campaign.weekly_data?.length || 0}</p>
                         </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+
+                    {/* Editable Weekly Data */}
+                    <EditableWeeklyData
+                      campaignId={campaign.id}
+                      campaignName={campaign.name}
+                      weeklyData={campaign.weekly_data || []}
+                    />
+                  </TabsContent>
+                ))}
+              </Tabs>
             )}
           </div>
+
+          {/* Infrastructure Management */}
+          {activeProject && (
+            <EditableInfrastructure
+              projectId={activeProject.id}
+              infrastructure={infrastructure}
+            />
+          )}
 
           {/* Data Security Info */}
           <div className="border-t pt-6">
