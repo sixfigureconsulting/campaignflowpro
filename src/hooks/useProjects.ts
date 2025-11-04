@@ -12,22 +12,35 @@ export function useProjects() {
   const { data: projects, isLoading, error } = useQuery({
     queryKey: ['projects', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('projects')
-        .select(`
-          *,
-          campaigns (
+      try {
+        const { data, error } = await supabase
+          .from('projects')
+          .select(`
             *,
-            weekly_data (*)
-          ),
-          infrastructure (*)
-        `)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
+            campaigns (
+              *,
+              weekly_data (*)
+            ),
+            infrastructure (*)
+          `)
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('Database error loading projects:', error);
+          throw error;
+        }
+        
+        // Return empty array instead of null if no projects
+        return data || [];
+      } catch (err) {
+        console.error('Error in useProjects:', err);
+        throw err;
+      }
     },
     enabled: !!user,
+    retry: 1,
+    // Don't show error for empty results
+    throwOnError: false,
   });
 
   const createProject = useMutation({

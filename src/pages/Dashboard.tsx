@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { MetricCard } from "@/components/MetricCard";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { LogOut, TrendingUp, Target, Users, Calendar } from "lucide-react";
+import { LogOut, TrendingUp, Target, Users, Calendar, RefreshCw } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProjects } from "@/hooks/useProjects";
 import { CreateProjectDialog } from "@/components/CreateProjectDialog";
@@ -10,10 +10,22 @@ import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { EditableWeeklyData } from "@/components/EditableWeeklyData";
 import { EditableInfrastructure } from "@/components/EditableInfrastructure";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const { signOut, user } = useAuth();
   const { projects, isLoading, error } = useProjects();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  const handleRefresh = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['projects'] });
+    toast({
+      title: "Data refreshed",
+      description: "Your dashboard has been updated with the latest data",
+    });
+  };
   
   // Use first project for now (multi-project support can be added later)
   const activeProject = projects?.[0];
@@ -176,6 +188,10 @@ const Dashboard = () => {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
               <CreateProjectDialog />
               <Button variant="outline" size="sm" onClick={signOut}>
                 <LogOut className="mr-2 h-4 w-4" />
