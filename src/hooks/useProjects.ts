@@ -26,14 +26,12 @@ export function useProjects() {
           .order('created_at', { ascending: false });
         
         if (error) {
-          console.error('Database error loading projects:', error);
           throw error;
         }
         
         // Return empty array instead of null if no projects
         return data || [];
       } catch (err) {
-        console.error('Error in useProjects:', err);
         throw err;
       }
     },
