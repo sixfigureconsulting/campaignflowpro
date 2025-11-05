@@ -77,7 +77,7 @@ export default function Auth() {
         });
         navigate('/dashboard');
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -90,11 +90,21 @@ export default function Auth() {
 
         if (error) throw error;
 
-        setEmailSent(true);
-        toast({
-          title: "Check your email",
-          description: "We've sent you a verification link. Please check your inbox and verify your email to continue.",
-        });
+        // If auto-confirm is enabled, a session will be returned and we can route to dashboard
+        if (data?.session) {
+          toast({
+            title: "Success",
+            description: "Account created. Redirecting to your dashboard...",
+          });
+          navigate('/dashboard');
+        } else {
+          // Otherwise ask the user to verify their email
+          setEmailSent(true);
+          toast({
+            title: "Check your email",
+            description: "We've sent you a verification link. Please verify to continue.",
+          });
+        }
       }
     } catch (error: any) {
       toast({
