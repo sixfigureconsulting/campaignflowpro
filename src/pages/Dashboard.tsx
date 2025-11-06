@@ -19,6 +19,17 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
+  // Use first project for now (multi-project support can be added later)
+  const activeProject = projects?.[0];
+  const brandColor = activeProject?.brand_color || "#4F46E5";
+  const clientName = activeProject?.client_name || "CampaignFlow Pro";
+  
+  // Campaign tabs state - must be declared before any conditional returns
+  const campaigns = activeProject?.campaigns || [];
+  const [activeCampaignTab, setActiveCampaignTab] = useState<string | undefined>(
+    campaigns[0]?.id
+  );
+  
   const handleRefresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ['projects'] });
     toast({
@@ -26,11 +37,6 @@ const Dashboard = () => {
       description: "Your dashboard has been updated with the latest data",
     });
   };
-  
-  // Use first project for now (multi-project support can be added later)
-  const activeProject = projects?.[0];
-  const brandColor = activeProject?.brand_color || "#4F46E5";
-  const clientName = activeProject?.client_name || "CampaignFlow Pro";
   
   // Apply brand color to CSS variables
   useEffect(() => {
@@ -122,7 +128,6 @@ const Dashboard = () => {
   }
 
   // Calculate metrics from database
-  const campaigns = activeProject?.campaigns || [];
   const totalCampaigns = campaigns.length;
   
   const totalLeads = campaigns.reduce((sum: number, campaign: any) => {
@@ -141,11 +146,6 @@ const Dashboard = () => {
   const infrastructure = activeProject?.infrastructure?.[0];
   const totalMailboxes = infrastructure?.mailboxes || 0;
   const totalLinkedInAccounts = infrastructure?.linkedin_accounts || 0;
-
-  // Campaign tabs state
-  const [activeCampaignTab, setActiveCampaignTab] = useState<string | undefined>(
-    campaigns[0]?.id
-  );
 
   useEffect(() => {
     if (campaigns.length > 0 && !activeCampaignTab) {
