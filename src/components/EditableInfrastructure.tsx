@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +19,12 @@ export function EditableInfrastructure({ projectId, infrastructure }: EditableIn
   const [mailboxes, setMailboxes] = useState(infrastructure?.mailboxes?.toString() || '0');
   const [linkedinAccounts, setLinkedinAccounts] = useState(infrastructure?.linkedin_accounts?.toString() || '0');
   const { upsertInfrastructure } = useInfrastructure(projectId);
+
+  // Update local state when infrastructure prop changes
+  useEffect(() => {
+    setMailboxes(infrastructure?.mailboxes?.toString() || '0');
+    setLinkedinAccounts(infrastructure?.linkedin_accounts?.toString() || '0');
+  }, [infrastructure?.mailboxes, infrastructure?.linkedin_accounts]);
 
   const handleSave = async () => {
     await upsertInfrastructure.mutateAsync({

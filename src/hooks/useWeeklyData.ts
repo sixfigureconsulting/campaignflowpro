@@ -11,6 +11,7 @@ export function useWeeklyData(campaignId: string) {
     mutationFn: async (weeklyData: {
       week_number: number;
       leads_contacted: number;
+      target_outreach?: number;
     }) => {
       // Validate input
       const validated = weeklyDataSchema.parse(weeklyData);
@@ -21,6 +22,7 @@ export function useWeeklyData(campaignId: string) {
           campaign_id: campaignId,
           week_number: validated.week_number,
           leads_contacted: validated.leads_contacted,
+          target_outreach: validated.target_outreach,
         }, {
           onConflict: 'campaign_id,week_number',
           ignoreDuplicates: false,

@@ -17,6 +17,7 @@ export function CreateCampaignDialog({ projectId }: CreateCampaignDialogProps) {
     startDate: '',
     targetLeads: '',
     allocatedBudget: '',
+    targetOutreach: '',
   });
   
   const { createCampaign } = useCampaigns(projectId);
@@ -29,10 +30,11 @@ export function CreateCampaignDialog({ projectId }: CreateCampaignDialogProps) {
       start_date: formData.startDate,
       target_leads: parseInt(formData.targetLeads),
       allocated_budget: parseFloat(formData.allocatedBudget),
+      target_outreach: formData.targetOutreach ? parseInt(formData.targetOutreach) : 0,
     });
 
     setOpen(false);
-    setFormData({ name: '', startDate: '', targetLeads: '', allocatedBudget: '' });
+    setFormData({ name: '', startDate: '', targetLeads: '', allocatedBudget: '', targetOutreach: '' });
   };
 
   return (
@@ -97,6 +99,18 @@ export function CreateCampaignDialog({ projectId }: CreateCampaignDialogProps) {
               onChange={(e) => setFormData({ ...formData, allocatedBudget: e.target.value })}
               placeholder="5000.00"
               required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="targetOutreach">Target Outreach</Label>
+            <Input
+              id="targetOutreach"
+              type="number"
+              min="0"
+              value={formData.targetOutreach}
+              onChange={(e) => setFormData({ ...formData, targetOutreach: e.target.value })}
+              placeholder="500"
             />
           </div>
 

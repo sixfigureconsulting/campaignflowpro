@@ -23,6 +23,7 @@ export type Database = {
           project_id: string
           start_date: string
           target_leads: number
+          target_outreach: number | null
           updated_at: string | null
         }
         Insert: {
@@ -33,6 +34,7 @@ export type Database = {
           project_id: string
           start_date: string
           target_leads: number
+          target_outreach?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -43,6 +45,7 @@ export type Database = {
           project_id?: string
           start_date?: string
           target_leads?: number
+          target_outreach?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -259,6 +262,7 @@ export type Database = {
           created_at: string | null
           id: string
           leads_contacted: number
+          target_outreach: number | null
           updated_at: string | null
           week_number: number
         }
@@ -267,6 +271,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           leads_contacted?: number
+          target_outreach?: number | null
           updated_at?: string | null
           week_number: number
         }
@@ -275,6 +280,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           leads_contacted?: number
+          target_outreach?: number | null
           updated_at?: string | null
           week_number?: number
         }

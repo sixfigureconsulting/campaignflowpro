@@ -10,6 +10,7 @@ import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { EditableWeeklyData } from "@/components/EditableWeeklyData";
 import { EditableInfrastructure } from "@/components/EditableInfrastructure";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { WeeklyTrendChart } from "@/components/WeeklyTrendChart";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,8 +27,8 @@ const Dashboard = () => {
   
   // Campaign tabs state - must be declared before any conditional returns
   const campaigns = activeProject?.campaigns || [];
-  const [activeCampaignTab, setActiveCampaignTab] = useState<string | undefined>(
-    campaigns[0]?.id
+  const [activeCampaignTab, setActiveCampaignTab] = useState<string>(
+    campaigns[0]?.id || ''
   );
   
   const handleRefresh = async () => {
@@ -247,41 +248,60 @@ const Dashboard = () => {
                   ))}
                 </TabsList>
 
-                {campaigns.map((campaign: any) => (
-                  <TabsContent key={campaign.id} value={campaign.id} className="space-y-6">
-                    {/* Campaign Summary */}
-                    <div className="border rounded-lg p-6 bg-card">
-                      <h3 className="font-semibold text-lg mb-4">{campaign.name}</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div>
-                          <p className="text-muted-foreground">Start Date</p>
-                          <p className="font-medium">
-                            {new Date(campaign.start_date).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Target Leads</p>
-                          <p className="font-medium">{campaign.target_leads.toLocaleString()}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Budget</p>
-                          <p className="font-medium">${campaign.allocated_budget.toLocaleString()}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Weeks Active</p>
-                          <p className="font-medium">{campaign.weekly_data?.length || 0}</p>
+                {campaigns.map((campaign: any) => {
+                  // Prepare data for chart
+                  const chartData = (campaign.weekly_data || []).map((week: any) => ({
+                    week: `Week ${week.week_number}`,
+                    leads: week.leads_contacted || 0,
+                    responses: 0, // Placeholder
+                    appointments: 0, // Placeholder
+                  }));
+
+                  return (
+                    <TabsContent key={campaign.id} value={campaign.id} className="space-y-6">
+                      {/* Campaign Summary */}
+                      <div className="border rounded-lg p-6 bg-card">
+                        <h3 className="font-semibold text-lg mb-4">{campaign.name}</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <p className="text-muted-foreground">Start Date</p>
+                            <p className="font-medium">
+                              {new Date(campaign.start_date).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Target Leads</p>
+                            <p className="font-medium">{campaign.target_leads.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Budget</p>
+                            <p className="font-medium">${campaign.allocated_budget.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Weeks Active</p>
+                            <p className="font-medium">{campaign.weekly_data?.length || 0}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Editable Weekly Data */}
-                    <EditableWeeklyData
-                      campaignId={campaign.id}
-                      campaignName={campaign.name}
-                      weeklyData={campaign.weekly_data || []}
-                    />
-                  </TabsContent>
-                ))}
+                      {/* Performance Chart */}
+                      {chartData.length > 0 && (
+                        <WeeklyTrendChart
+                          data={chartData}
+                          campaignName={campaign.name}
+                          goalAppointments={campaign.target_leads}
+                        />
+                      )}
+
+                      {/* Editable Weekly Data */}
+                      <EditableWeeklyData
+                        campaignId={campaign.id}
+                        campaignName={campaign.name}
+                        weeklyData={campaign.weekly_data || []}
+                      />
+                    </TabsContent>
+                  );
+                })}
               </Tabs>
             )}
           </div>
@@ -294,40 +314,6 @@ const Dashboard = () => {
             />
           )}
 
-          {/* Data Security Info */}
-          <div className="border-t pt-6">
-            <h3 className="text-sm font-medium mb-3">Data Security & Privacy</h3>
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4 text-xs text-muted-foreground">
-              <div className="flex items-start gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-green-500 mt-1.5"></div>
-                <div>
-                  <p className="font-medium text-foreground">Row-Level Security</p>
-                  <p>Your data is isolated from other users</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-green-500 mt-1.5"></div>
-                <div>
-                  <p className="font-medium text-foreground">Encrypted Storage</p>
-                  <p>All data encrypted at rest and in transit</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-green-500 mt-1.5"></div>
-                <div>
-                  <p className="font-medium text-foreground">Email Verified</p>
-                  <p>Spam accounts prevented by email verification</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-green-500 mt-1.5"></div>
-                <div>
-                  <p className="font-medium text-foreground">Auto-Save</p>
-                  <p>Changes saved automatically to cloud</p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </main>
     </div>

@@ -13,6 +13,7 @@ export function useCampaigns(projectId: string) {
       start_date: string;
       target_leads: number;
       allocated_budget: number;
+      target_outreach?: number;
     }) => {
       // Validate input
       const validated = campaignSchema.parse(campaignData);
@@ -25,6 +26,7 @@ export function useCampaigns(projectId: string) {
           start_date: validated.start_date,
           target_leads: validated.target_leads,
           allocated_budget: validated.allocated_budget,
+          target_outreach: validated.target_outreach || 0,
         }])
         .select()
         .single();

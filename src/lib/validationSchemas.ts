@@ -32,12 +32,14 @@ export const campaignSchema = z.object({
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { message: "Invalid date format (YYYY-MM-DD)" }),
   target_leads: z.number().int().positive({ message: "Target leads must be positive" }).max(1000000),
   allocated_budget: z.number().positive({ message: "Budget must be positive" }).max(100000000),
+  target_outreach: z.number().int().nonnegative({ message: "Target outreach cannot be negative" }).max(1000000).optional(),
 });
 
 // Weekly data schemas
 export const weeklyDataSchema = z.object({
   week_number: z.number().int().positive().max(52, { message: "Week number must be between 1 and 52" }),
   leads_contacted: z.number().int().nonnegative({ message: "Leads contacted cannot be negative" }).max(100000),
+  target_outreach: z.number().int().nonnegative({ message: "Target outreach cannot be negative" }).max(100000).optional(),
 });
 
 // Infrastructure schemas
