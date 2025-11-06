@@ -108,27 +108,6 @@ const Dashboard = () => {
               Your secure workspace is ready. Create your first project to get started.
             </p>
           </div>
-          
-          <div className="bg-card p-6 rounded-lg border space-y-4">
-            <div className="grid grid-cols-1 gap-3 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                <span className="text-muted-foreground">Email verified for {user?.email}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                <span className="text-muted-foreground">Secure database provisioned</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                <span className="text-muted-foreground">Data encrypted at rest</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                <span className="text-muted-foreground">RLS policies active</span>
-              </div>
-            </div>
-          </div>
 
           <div className="space-y-3">
             <CreateProjectDialog />
