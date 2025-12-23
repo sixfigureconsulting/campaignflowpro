@@ -27,9 +27,7 @@ const Dashboard = () => {
   
   // Campaign tabs state - must be declared before any conditional returns
   const campaigns = activeProject?.campaigns || [];
-  const [activeCampaignTab, setActiveCampaignTab] = useState<string>(
-    campaigns[0]?.id || ''
-  );
+  const [activeCampaignTab, setActiveCampaignTab] = useState<string>('');
   
   const handleRefresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ['projects'] });
@@ -71,6 +69,13 @@ const Dashboard = () => {
     
     root.style.setProperty('--primary', `${hslH} ${hslS}% ${hslL}%`);
   }, [brandColor]);
+
+  // Set active campaign tab when campaigns load - must be before conditional returns
+  useEffect(() => {
+    if (campaigns.length > 0 && !activeCampaignTab) {
+      setActiveCampaignTab(campaigns[0].id);
+    }
+  }, [campaigns, activeCampaignTab]);
 
   // Show loading state
   if (isLoading) {
@@ -147,12 +152,6 @@ const Dashboard = () => {
   const infrastructure = activeProject?.infrastructure?.[0];
   const totalMailboxes = infrastructure?.mailboxes || 0;
   const totalLinkedInAccounts = infrastructure?.linkedin_accounts || 0;
-
-  useEffect(() => {
-    if (campaigns.length > 0 && !activeCampaignTab) {
-      setActiveCampaignTab(campaigns[0].id);
-    }
-  }, [campaigns, activeCampaignTab]);
 
   // Main dashboard view
   return (
