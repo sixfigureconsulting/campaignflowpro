@@ -4,6 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Palette, Upload } from "lucide-react";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+
+const MAX_LOGO_SIZE_MB = 2;
+const MAX_LOGO_SIZE_BYTES = MAX_LOGO_SIZE_MB * 1024 * 1024;
 
 interface CustomizationPanelProps {
   onColorChange: (color: string) => void;
@@ -25,6 +29,7 @@ export const CustomizationPanel = ({
   const [color, setColor] = useState(currentColor);
   const [clientName, setClientName] = useState(currentClientName);
   const [logoPreview, setLogoPreview] = useState<string>(currentLogo);
+  const { toast } = useToast();
 
   const handleColorChange = (newColor: string) => {
     setColor(newColor);
@@ -39,6 +44,18 @@ export const CustomizationPanel = ({
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file size (max 2MB)
+      if (file.size > MAX_LOGO_SIZE_BYTES) {
+        toast({
+          title: "File too large",
+          description: `Logo must be less than ${MAX_LOGO_SIZE_MB}MB. Your file is ${(file.size / (1024 * 1024)).toFixed(1)}MB.`,
+          variant: "destructive",
+        });
+        // Reset the input
+        e.target.value = '';
+        return;
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
