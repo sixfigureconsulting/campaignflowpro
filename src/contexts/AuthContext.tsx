@@ -21,10 +21,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Handle magic link sign in - redirect to dashboard after successful login
+        if (event === 'SIGNED_IN' && session) {
+          // Use setTimeout to defer navigation and avoid potential deadlocks
+          setTimeout(() => {
+            // Only navigate if currently on auth page or root
+            const currentPath = window.location.pathname;
+            if (currentPath === '/auth' || currentPath === '/') {
+              navigate('/dashboard');
+            }
+          }, 0);
+        }
       }
     );
 
@@ -36,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
