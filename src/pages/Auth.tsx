@@ -8,17 +8,20 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { loginSchema, signupSchema, authSchema } from '@/lib/validationSchemas';
 import { useAuth } from '@/contexts/AuthContext';
-
+import { Separator } from '@/components/ui/separator';
+import { Mail } from 'lucide-react';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isMagicLink, setIsMagicLink] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -51,6 +54,39 @@ export default function Auth() {
     
     // Generic fallback - never expose raw database errors
     return 'Unable to complete authentication. Please try again.';
+  };
+
+  const handleMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // Validate email
+      authSchema.email.parse(email);
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      if (error) throw error;
+
+      setMagicLinkSent(true);
+      toast({
+        title: "Check your email",
+        description: "We've sent you a magic link to sign in",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: getAuthErrorMessage(error),
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -149,6 +185,40 @@ export default function Auth() {
     }
   };
 
+  if (magicLinkSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Check Your Email</CardTitle>
+            <CardDescription>
+              We've sent a magic link to {email}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Please check your email inbox and click the magic link to sign in instantly.
+              No password required!
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Didn't receive the email? Check your spam folder or try again.
+            </p>
+            <Button 
+              onClick={() => {
+                setMagicLinkSent(false);
+                setIsMagicLink(false);
+                setIsLogin(true);
+              }} 
+              variant="outline" 
+              className="w-full"
+            >
+              Back to Sign In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (resetEmailSent) {
     return (
@@ -212,6 +282,49 @@ export default function Auth() {
             >
               Back to Sign In
             </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isMagicLink) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Sign In with Magic Link</CardTitle>
+            <CardDescription>
+              Enter your email to receive a passwordless sign in link
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleMagicLink} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                <Mail className="mr-2 h-4 w-4" />
+                {loading ? 'Sending...' : 'Send Magic Link'}
+              </Button>
+            </form>
+            <div className="mt-4 text-center text-sm">
+              <button
+                type="button"
+                onClick={() => setIsMagicLink(false)}
+                className="text-primary hover:underline"
+              >
+                Back to Sign In with Password
+              </button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -324,6 +437,27 @@ export default function Auth() {
               </div>
             )}
 
+            {isLogin && (
+              <>
+                <div className="relative my-4">
+                  <Separator />
+                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+                    OR
+                  </span>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setIsMagicLink(true)}
+                  disabled={loading}
+                >
+                  <Mail className="mr-2 h-4 w-4" />
+                  Sign in with Magic Link
+                </Button>
+              </>
+            )}
           </form>
           <div className="mt-4 text-center text-sm">
             <button
