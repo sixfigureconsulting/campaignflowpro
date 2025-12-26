@@ -3,7 +3,7 @@ import React from "react";
 
 export const PROJECT_TYPES = [
   { value: 'outbound_sales', label: 'Outbound Sales' },
-  { value: 'inbound_marketing', label: 'Inbound Marketing' },
+  { value: 'seo', label: 'SEO' },
   { value: 'events', label: 'Events' },
   { value: 'paid_ads', label: 'Paid Ads' },
   { value: 'social_media', label: 'Social Media' },
@@ -24,11 +24,11 @@ export const PROJECT_TYPE_CONFIG: Record<ProjectType, {
     color: 'bg-blue-500/10 text-blue-600 border-blue-200',
     description: 'Cold outreach, email campaigns, LinkedIn prospecting'
   },
-  inbound_marketing: { 
-    label: 'Inbound Marketing', 
+  seo: { 
+    label: 'SEO', 
     icon: TrendingUp,
     color: 'bg-green-500/10 text-green-600 border-green-200',
-    description: 'SEO, blog content, lead magnets, organic traffic'
+    description: 'Search engine optimization, keyword rankings, organic traffic'
   },
   events: { 
     label: 'Events', 
