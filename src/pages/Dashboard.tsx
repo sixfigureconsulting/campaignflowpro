@@ -1,27 +1,31 @@
 import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { MetricCard } from "@/components/MetricCard";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { LogOut, TrendingUp, Target, Users, Calendar, RefreshCw } from "lucide-react";
+import { LogOut, TrendingUp, Target, Users, Calendar, RefreshCw, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProjects } from "@/hooks/useProjects";
-import { CreateProjectDialog } from "@/components/CreateProjectDialog";
 import { CreateCampaignDialog } from "@/components/CreateCampaignDialog";
 import { EditableWeeklyData } from "@/components/EditableWeeklyData";
 import { EditableInfrastructure } from "@/components/EditableInfrastructure";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WeeklyTrendChart } from "@/components/WeeklyTrendChart";
+import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { PROJECT_TYPE_CONFIG, type ProjectType } from "@/lib/projectTypes";
 
 const Dashboard = () => {
+  const { projectId } = useParams<{ projectId: string }>();
+  const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const { projects, isLoading, error } = useProjects();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
-  // Use first project for now (multi-project support can be added later)
-  const activeProject = projects?.[0];
+  // Find the specific project by ID
+  const activeProject = projects?.find((p: any) => p.id === projectId);
   const brandColor = activeProject?.brand_color || "#4F46E5";
   const clientName = activeProject?.client_name || "CampaignFlow Pro";
   
@@ -109,29 +113,28 @@ const Dashboard = () => {
     );
   }
 
-  // Show empty state with create project prompt
-  if (!projects || projects.length === 0) {
+  // Show empty state - redirect to main dashboard if project not found
+  if (!activeProject) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-muted">
         <div className="text-center space-y-6 max-w-md">
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">Welcome to {clientName}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Project Not Found</h1>
             <p className="text-muted-foreground">
-              Your secure workspace is ready. Create your first project to get started.
+              This project doesn't exist or you don't have access to it.
             </p>
           </div>
-
-          <div className="space-y-3">
-            <CreateProjectDialog />
-            <Button variant="outline" onClick={signOut} className="w-full">
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
-            </Button>
-          </div>
+          <Button onClick={() => navigate('/dashboard')} className="w-full">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Button>
         </div>
       </div>
     );
   }
+
+  const projectType = (activeProject?.project_type || 'outbound_sales') as ProjectType;
+  const typeConfig = PROJECT_TYPE_CONFIG[projectType];
 
   // Calculate metrics from database
   const totalCampaigns = campaigns.length;
@@ -154,24 +157,37 @@ const Dashboard = () => {
   const totalLinkedInAccounts = infrastructure?.linkedin_accounts || 0;
 
   // Main dashboard view
+  const TypeIcon = typeConfig.icon;
+  
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur">
+      <header className="border-b bg-card/50 backdrop-blur sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">{clientName}</h1>
-              <p className="text-sm text-muted-foreground">
-                Project: {activeProject?.name} • Logged in as {user?.email}
-              </p>
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                All Projects
+              </Button>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-bold">{activeProject?.name}</h1>
+                  <Badge className={typeConfig.color}>
+                    <TypeIcon className="h-3 w-3 mr-1" />
+                    {typeConfig.label}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {clientName} • {user?.email}
+                </p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
-              <CreateProjectDialog />
               <Button variant="outline" size="sm" onClick={signOut}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign Out

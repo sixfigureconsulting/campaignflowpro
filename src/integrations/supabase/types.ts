@@ -201,6 +201,7 @@ export type Database = {
           id: string
           logo_url: string | null
           name: string
+          project_type: string
           updated_at: string | null
           user_id: string
         }
@@ -211,6 +212,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name: string
+          project_type?: string
           updated_at?: string | null
           user_id: string
         }
@@ -221,6 +223,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name?: string
+          project_type?: string
           updated_at?: string | null
           user_id?: string
         }
