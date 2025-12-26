@@ -43,7 +43,7 @@ export function useProjects() {
   });
 
   const createProject = useMutation({
-    mutationFn: async (projectData: { name: string; client_name?: string; brand_color?: string; logo_url?: string }) => {
+    mutationFn: async (projectData: { name: string; client_name?: string; brand_color?: string; logo_url?: string; project_type?: string }) => {
       // Validate input
       const validated = projectSchema.parse(projectData);
       
@@ -55,6 +55,7 @@ export function useProjects() {
           client_name: validated.client_name || 'CampaignFlow Pro',
           brand_color: validated.brand_color || '#6366f1',
           logo_url: validated.logo_url || '',
+          project_type: projectData.project_type || 'outbound_sales',
         }])
         .select()
         .single();
