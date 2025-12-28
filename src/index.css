@@ -55,6 +55,11 @@ All colors MUST be HSL.
     --shadow-md: 0 4px 6px -1px rgba(33, 128, 141, 0.08), 0 2px 4px -2px rgba(33, 128, 141, 0.05);
     --shadow-lg: 0 10px 15px -3px rgba(33, 128, 141, 0.1), 0 4px 6px -4px rgba(33, 128, 141, 0.05);
     --shadow-xl: 0 20px 25px -5px rgba(33, 128, 141, 0.12), 0 8px 10px -6px rgba(33, 128, 141, 0.05);
+    
+    /* Glow Effects */
+    --glow-primary: 0 0 20px rgba(33, 128, 141, 0.15);
+    --glow-success: 0 0 20px rgba(34, 197, 94, 0.15);
+    --glow-warning: 0 0 20px rgba(249, 115, 22, 0.15);
 
     /* Chart Colors */
     --chart-1: 185 61% 34%;
@@ -62,6 +67,7 @@ All colors MUST be HSL.
     --chart-3: 142 69% 45%;
     --chart-4: 24 90% 58%;
     --chart-5: 351 81% 42%;
+    --chart-6: 280 65% 50%;
   }
 
   .dark {
@@ -167,5 +173,54 @@ All colors MUST be HSL.
 
   .gradient-warning {
     background: var(--gradient-warning);
+  }
+
+  .glow-primary {
+    box-shadow: var(--glow-primary);
+  }
+
+  .glow-success {
+    box-shadow: var(--glow-success);
+  }
+
+  .glow-warning {
+    box-shadow: var(--glow-warning);
+  }
+
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-sm border border-border/50;
+  }
+
+  .stat-card {
+    @apply relative overflow-hidden rounded-xl border bg-card p-6 transition-all duration-300;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-primary);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .stat-card:hover::before {
+    opacity: 1;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .progress-bar {
+    @apply h-2 rounded-full bg-muted overflow-hidden;
+  }
+
+  .progress-bar-fill {
+    @apply h-full rounded-full transition-all duration-500 ease-out;
   }
 }
