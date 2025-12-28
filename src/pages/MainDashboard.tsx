@@ -24,6 +24,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useProjects } from "@/hooks/useProjects";
 import { CreateProjectDialog } from "@/components/CreateProjectDialog";
+import { ThemeSelector } from "@/components/ThemeSelector";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -192,6 +193,7 @@ const MainDashboard = () => {
                 <RefreshCw className={cn("mr-2 h-4 w-4", isLoading && 'animate-spin')} />
                 Refresh
               </Button>
+              <ThemeSelector />
               <CreateProjectDialog />
               <Button 
                 variant="ghost" 
